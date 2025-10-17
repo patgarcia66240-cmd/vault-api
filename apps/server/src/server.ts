@@ -4,6 +4,7 @@ import cors from '@fastify/cors'
 import cookie from '@fastify/cookie'
 import jwt from '@fastify/jwt'
 import rateLimit from '@fastify/rate-limit'
+import { authRoutes } from './routes/auth'
 import { mockAuthRoutes } from './routes/mockAuth'
 
 export const createServer = async (): Promise<FastifyInstance<Server>> => {
@@ -81,7 +82,7 @@ export const createServer = async (): Promise<FastifyInstance<Server>> => {
   })
 
   // Register routes
-  await server.register(mockAuthRoutes, { prefix: '/api/auth' })
+  await server.register(authRoutes, { prefix: '/api/auth' })
 
   return server
 }

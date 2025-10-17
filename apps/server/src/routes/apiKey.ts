@@ -1,13 +1,18 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { createApiKey, getUserApiKeys, revokeApiKey } from '../services/apiKey'
-import { createApiKeySchema } from '../schemas/apiKey'
+import { createApiKeySchema, CreateApiKeyInput } from '../schemas/apiKey'
+import { JWTPayload } from '../libs/jwt'
 
 export const apiKeyRoutes = async (fastify: FastifyInstance) => {
   fastify.post('/keys', {
-    preHandler: [fastify.authenticate]
+    preHandler: [fastify.authenticate],
+    schema: {
+      body: createApiKeySchema
+    }
   }, async (request: FastifyRequest, reply: FastifyReply) => {
     try {
-      const result = await createApiKey(request.user!.sub, request.body)
+      const user = request.user as JWTPayload
+      const result = await createApiKey(user.sub, request.body as CreateApiKeyInput)
       return reply.status(201).send(result)
     } catch (error) {
       fastify.log.error(error)
@@ -22,7 +27,8 @@ export const apiKeyRoutes = async (fastify: FastifyInstance) => {
     preHandler: [fastify.authenticate]
   }, async (request: FastifyRequest, reply: FastifyReply) => {
     try {
-      const apiKeys = await getUserApiKeys(request.user!.sub)
+      const user = request.user as JWTPayload
+      const apiKeys = await getUserApiKeys(user.sub)
       return reply.send({ apiKeys })
     } catch (error) {
       fastify.log.error(error)
@@ -32,9 +38,10 @@ export const apiKeyRoutes = async (fastify: FastifyInstance) => {
 
   fastify.delete('/keys/:id', {
     preHandler: [fastify.authenticate]
-  }, async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
     try {
-      await revokeApiKey(request.user!.sub, request.params.id)
+      const user = request.user as JWTPayload
+      await revokeApiKey(user.sub, (request.params as { id: string }).id)
       return reply.send({ success: true })
     } catch (error) {
       fastify.log.error(error)

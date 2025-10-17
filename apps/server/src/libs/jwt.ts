@@ -1,4 +1,4 @@
-import { FastifyJWT } from '@fastify/jwt'
+import { JWT as FastifyJWT } from '@fastify/jwt'
 
 export interface JWTPayload {
   sub: string

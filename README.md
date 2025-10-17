@@ -1,77 +1,78 @@
-# Base44 - API Key Management Platform
+# Vault API - Gestionnaire de Clés API
 
-A complete, production-ready API key management system built with modern web technologies.
+Plateforme complète de gestion de clés API construite avec les technologies web modernes.
 
-## 🚀 Features
+## 🚀 Fonctionnalités
 
-- **🔐 Secure Authentication** - JWT-based authentication with HttpOnly cookies
-- **🔑 API Key Management** - Create, view, and revoke API keys with AES-256-GCM encryption
-- **💳 Stripe Integration** - Seamless subscription management (Free/PRO plans)
-- **🎨 Glassmorphism UI** - Modern, beautiful interface with Tailwind CSS
-- **📱 Responsive Design** - Works perfectly on all devices
-- **🔒 Security First** - Rate limiting, CORS protection, encrypted secrets
+- **🔐 Authentification Sécurisée** - JWT avec cookies HttpOnly
+- **🔑 Gestion de Clés API** - Créer, voir et révoquer des clés API avec chiffrement AES-256-GCM
+- **💳 Intégration Stripe** - Gestion d'abonnements (Gratuit/PRO)
+- **🎨 UI Glassmorphism** - Interface moderne et élégante avec Tailwind CSS
+- **📱 Design Responsive** - Fonctionne parfaitement sur tous les appareils
+- **🔒 Sécurité Avancée** - Rate limiting, protection CORS, secrets chiffrés
 
-## 🛠 Tech Stack
+## 🛠 Stack Technique
 
-### Frontend
+### Frontend (apps/web)
 - **React 18** + **TypeScript**
-- **Vite** for fast development
-- **React Router** for navigation
-- **React Query** for server state management
-- **Tailwind CSS** with custom glassmorphism design
-- **Axios** for API calls
+- **Vite** pour le développement rapide
+- **React Router** pour la navigation
+- **React Query** pour la gestion d'état serveur
+- **Tailwind CSS** avec design glassmorphism
+- **Axios** pour les appels API
 
-### Backend
+### Backend (apps/server)
 - **Fastify** (Node.js) + **TypeScript**
-- **Prisma** ORM with **SQLite**
-- **JWT** authentication
-- **AES-256-GCM** encryption
-- **Stripe** for payments
-- **Zod** for validation
-- **Pino** for logging
+- **Prisma** ORM avec **SQLite**
+- **JWT** pour l'authentification
+- **AES-256-GCM** pour le chiffrement
+- **Stripe** pour les paiements
+- **Zod** pour la validation
+- **Pino** pour les logs
 
-## 📁 Project Structure
+## 📁 Structure du Projet
 
 ```
-base44/
+vault-api/
 ├─ apps/
 │  ├─ server/           # Backend Fastify
 │  │  ├─ src/
 │  │  │  ├─ libs/       # JWT, crypto, utils
-│  │  │  ├─ services/   # Business logic
-│  │  │  ├─ routes/     # API endpoints
-│  │  │  └─ schemas/    # Zod validation
-│  │  └─ prisma/
+│  │  │  ├─ services/   # Logique métier
+│  │  │  ├─ routes/     # Endpoints API
+│  │  │  └─ schemas/    # Validation Zod
+│  │  └─ prisma/        # Schéma de base de données
 │  └─ web/              # Frontend React
 │     ├─ src/
-│     │  ├─ components/ # UI components
-│     │  ├─ pages/      # React pages
-│     │  └─ lib/        # Services & API
-├─ package.json         # Workspace config
+│     │  ├─ components/ # Composants UI
+│     │  ├─ pages/      # Pages React
+│     │  └─ lib/        # Services & API client
+├─ debug-server.js      # Script de débogage
+├─ package.json         # Configuration workspace
 └─ README.md
 ```
 
-## 🚀 Quick Start
+## 🚀 Démarrage Rapide
 
-### Prerequisites
+### Prérequis
 - Node.js 18+
 - pnpm 8+
 
 ### Installation
 
-1. **Clone and install dependencies**
+1. **Cloner et installer les dépendances**
 ```bash
 git clone <repository>
-cd base44
+cd vault-api
 pnpm install
 ```
 
-2. **Set up environment variables**
+2. **Configurer les variables d'environnement**
 
 Backend (apps/server/.env):
 ```bash
 cp apps/server/.env.example apps/server/.env
-# Edit apps/server/.env with your values
+# Éditer apps/server/.env avec vos valeurs
 ```
 
 Frontend (apps/web/.env):
@@ -79,23 +80,23 @@ Frontend (apps/web/.env):
 cp apps/web/.env.example apps/web/.env
 ```
 
-3. **Set up the database**
+3. **Initialiser la base de données**
 ```bash
 pnpm prisma:generate
 pnpm prisma:migrate
 ```
 
-4. **Start development servers**
+4. **Démarrer les serveurs de développement**
 ```bash
-# Start both frontend and backend
+# Démarrer frontend et backend
 pnpm dev
 
-# Or start individually
-pnpm dev:server  # Backend on :8080
-pnpm dev:web     # Frontend on :5173
+# Ou individuellement
+pnpm dev:server  # Backend sur :8080
+pnpm dev:web     # Frontend sur :5173
 ```
 
-## 🔐 Environment Variables
+## 🔐 Variables d'Environnement
 
 ### Backend (.env)
 ```bash
@@ -115,57 +116,62 @@ WEB_BASE_URL="http://localhost:5173"
 VITE_API_URL=http://localhost:8080
 ```
 
-## 📊 API Endpoints
+## 📊 Endpoints API
 
-### Authentication
-- `POST /api/auth/signup` - Create new account
-- `POST /api/auth/login` - Login with credentials
-- `POST /api/auth/logout` - Logout user
-- `GET /api/auth/me` - Get current user
+### Authentification
+- `POST /api/auth/signup` - Créer un compte
+- `POST /api/auth/login` - Connexion
+- `POST /api/auth/logout` - Déconnexion
+- `GET /api/auth/me` - Utilisateur actuel
 
-### API Keys
-- `GET /api/keys` - List user's API keys
-- `POST /api/keys` - Create new API key
-- `DELETE /api/keys/:id` - Revoke API key
+### Clés API
+- `GET /api/keys` - Lister les clés API
+- `POST /api/keys` - Créer une nouvelle clé API
+- `DELETE /api/keys/:id` - Révoquer une clé API
 
-### Billing
-- `POST /api/billing/checkout` - Create Stripe checkout session
-- `POST /api/billing/webhook` - Handle Stripe webhooks
+### Facturation
+- `POST /api/billing/checkout` - Créer une session Stripe
+- `POST /api/billing/webhook` - Gérer les webhooks Stripe
 
-## 🎨 Design System
+## 🎨 Système de Design
 
-The application features a modern glassmorphism design with:
-- **Colors**: Black (#0a0a0a) + Yellow (#FFD400) theme
-- **Typography**: Inter font family
-- **Components**: Custom glassmorphic cards and buttons
-- **Animations**: Smooth transitions and micro-interactions
+L'application utilise un design glassmorphism moderne avec :
+- **Couleurs** : Noir (#0a0a0a) + Jaune (#FFD400)
+- **Typographie** : Police Inter
+- **Composants** : Cartes et boutons glassmorphism
+- **Animations** : Transitions fluides
 
-## 🧪 Development
+## 🛠️ Développement
 
-### Available Scripts
+### Scripts Disponibles
 
 ```bash
-# Development
-pnpm dev              # Start both servers
-pnpm dev:server       # Backend only
-pnpm dev:web          # Frontend only
+# Développement
+pnpm dev              # Démarrer les deux serveurs
+pnpm dev:server       # Backend uniquement
+pnpm dev:web          # Frontend uniquement
 
-# Database
-pnpm prisma:generate  # Generate Prisma client
-pnpm prisma:migrate   # Run migrations
-pnpm prisma:studio    # Open Prisma Studio
+# Base de données
+pnpm prisma:generate  # Générer client Prisma
+pnpm prisma:migrate   # Lancer les migrations
+pnpm prisma:studio    # Ouvrir Prisma Studio
 
-# Building
-pnpm build            # Build both apps
-pnpm build:server     # Backend only
-pnpm build:web        # Frontend only
+# Build
+pnpm build            # Build des deux apps
+pnpm build:server     # Backend uniquement
+pnpm build:web        # Frontend uniquement
 ```
+
+### Débogage
+
+Pour déboguer le backend :
+- **Script** : `node debug-server.js`
+- **VS Code** : Utiliser la configuration "Déboguer le Backend Server"
 
 ## 📝 License
 
-MIT License - see LICENSE file for details.
+MIT License - voir fichier LICENSE pour détails.
 
 ---
 
-Built with ❤️ using the Base44 architecture template.
-# vault-api
+Construit avec ❤️ pour Vault API.

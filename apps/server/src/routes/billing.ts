@@ -1,12 +1,14 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { createCheckoutSession, handleWebhook } from '../services/billing'
+import { JWTPayload } from '../libs/jwt'
 
 export const billingRoutes = async (fastify: FastifyInstance) => {
   fastify.post('/checkout', {
     preHandler: [fastify.authenticate]
   }, async (request: FastifyRequest, reply: FastifyReply) => {
     try {
-      const result = await createCheckoutSession(request.user!.sub, request.user!.email)
+      const user = request.user as JWTPayload
+      const result = await createCheckoutSession(user.sub, user.email)
       return reply.send(result)
     } catch (error) {
       fastify.log.error(error)
@@ -20,7 +22,7 @@ export const billingRoutes = async (fastify: FastifyInstance) => {
   fastify.post('/webhook', {
     config: {
       rawBody: true
-    }
+    } as any
   }, async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       const signature = request.headers['stripe-signature'] as string

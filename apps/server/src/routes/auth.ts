@@ -1,9 +1,26 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { signup, login } from '../services/auth'
-import { signupSchema, loginSchema } from '../schemas/auth'
+import { SignupInput, LoginInput } from '../schemas/auth'
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    authenticate: (request: FastifyRequest, reply: any) => Promise<void>;
+  }
+}
 
 export const authRoutes = async (fastify: FastifyInstance) => {
-  fastify.post('/signup', {}, async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/signup', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['email', 'password'],
+        properties: {
+          email: { type: 'string', format: 'email' },
+          password: { type: 'string', minLength: 8 }
+        }
+      }
+    }
+  }, async (request: FastifyRequest<{ Body: SignupInput }>, reply: FastifyReply) => {
     try {
       const result = await signup(request.body)
       return reply.status(201).send(result)
@@ -16,7 +33,18 @@ export const authRoutes = async (fastify: FastifyInstance) => {
     }
   })
 
-  fastify.post('/login', {}, async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.post('/login', {
+    schema: {
+      body: {
+        type: 'object',
+        required: ['email', 'password'],
+        properties: {
+          email: { type: 'string', format: 'email' },
+          password: { type: 'string', minLength: 1 }
+        }
+      }
+    }
+  }, async (request: FastifyRequest<{ Body: LoginInput }>, reply: FastifyReply) => {
     try {
       const result = await login(request.body, fastify.jwt)
 

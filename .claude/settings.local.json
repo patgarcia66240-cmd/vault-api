@@ -4,7 +4,8 @@
       "Bash(npm install:*)",
       "Bash(npm run migrate:*)",
       "Bash(curl:*)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(pnpm dev:server:*)"
     ],
     "deny": [],
     "ask": []
