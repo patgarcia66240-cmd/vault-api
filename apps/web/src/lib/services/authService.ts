@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import axios from 'axios'
 import { api, User, SignupData, LoginData } from '../api'
 
 export const useSignup = () => {
@@ -33,9 +34,19 @@ export const useLogout = () => {
 }
 
 export const useCurrentUser = () => {
-  return useQuery({
+  return useQuery<User | null>({
     queryKey: ['user'],
-    queryFn: () => api.get('/api/auth/me').then(res => res.data.user),
+    queryFn: async () => {
+      try {
+        const res = await api.get('/api/auth/me')
+        return res.data.user as User
+      } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 401) {
+          return null
+        }
+        throw error
+      }
+    },
     retry: false,
     staleTime: 1000 * 60 * 5, // 5 minutes
   })

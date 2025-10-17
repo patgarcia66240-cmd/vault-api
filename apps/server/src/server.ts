@@ -5,7 +5,8 @@ import cookie from '@fastify/cookie'
 import jwt from '@fastify/jwt'
 import rateLimit from '@fastify/rate-limit'
 import { authRoutes } from './routes/auth'
-import { mockAuthRoutes } from './routes/mockAuth'
+import { apiKeyRoutes } from './routes/apiKey'
+import { billingRoutes } from './routes/billing'
 
 export const createServer = async (): Promise<FastifyInstance<Server>> => {
   const server = Fastify<Server>({
@@ -83,6 +84,8 @@ export const createServer = async (): Promise<FastifyInstance<Server>> => {
 
   // Register routes
   await server.register(authRoutes, { prefix: '/api/auth' })
+  await server.register(apiKeyRoutes, { prefix: '/api' })
+  await server.register(billingRoutes, { prefix: '/api/billing' })
 
   return server
 }

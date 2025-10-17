@@ -1,18 +1,24 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { createApiKey, getUserApiKeys, revokeApiKey } from '../services/apiKey'
-import { createApiKeySchema, CreateApiKeyInput } from '../schemas/apiKey'
+import { createApiKeySchema } from '../schemas/apiKey'
 import { JWTPayload } from '../libs/jwt'
 
 export const apiKeyRoutes = async (fastify: FastifyInstance) => {
   fastify.post('/keys', {
-    preHandler: [fastify.authenticate],
-    schema: {
-      body: createApiKeySchema
-    }
+    preHandler: [fastify.authenticate]
   }, async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       const user = request.user as JWTPayload
-      const result = await createApiKey(user.sub, request.body as CreateApiKeyInput)
+
+      const parsedBody = createApiKeySchema.safeParse(request.body)
+      if (!parsedBody.success) {
+        return reply.status(400).send({
+          error: 'Validation error',
+          details: parsedBody.error.flatten()
+        })
+      }
+
+      const result = await createApiKey(user.sub, parsedBody.data)
       return reply.status(201).send(result)
     } catch (error) {
       fastify.log.error(error)

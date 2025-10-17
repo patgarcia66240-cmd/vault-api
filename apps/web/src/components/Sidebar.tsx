@@ -3,13 +3,21 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { clsx } from 'clsx'
 import { useLogout } from '../lib/services/authService'
 
-interface SidebarItemProps {
-  icon: React.ReactNode
-  label: string
-  href: string
-  isActive?: boolean
-  onClick?: () => void
-}
+type SidebarItemProps =
+  | {
+      icon: React.ReactNode
+      label: string
+      href: string
+      isActive?: boolean
+      onClick?: never
+    }
+  | {
+      icon: React.ReactNode
+      label: string
+      onClick: () => void
+      isActive?: boolean
+      href?: never
+    }
 
 const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, href, isActive, onClick }) => {
   const navigate = useNavigate()
@@ -17,7 +25,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, href, isActive, 
   const handleClick = () => {
     if (onClick) {
       onClick()
-    } else {
+    } else if (href) {
       navigate(href)
     }
   }
