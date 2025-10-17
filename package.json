@@ -1,0 +1,26 @@
+{
+  "name": "base44",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:server": "pnpm --filter server dev",
+    "dev:web": "pnpm --filter web dev",
+    "dev": "concurrently \"pnpm dev:server\" \"pnpm dev:web\"",
+    "build:server": "pnpm --filter server build",
+    "build:web": "pnpm --filter web build",
+    "build": "pnpm build:server && pnpm build:web",
+    "prisma:generate": "pnpm --filter server prisma:generate",
+    "prisma:migrate": "pnpm --filter server prisma:migrate",
+    "prisma:studio": "pnpm --filter server prisma:studio"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "@types/node": "^20.10.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
