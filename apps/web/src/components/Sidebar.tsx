@@ -127,8 +127,6 @@ export const Sidebar: React.FC = () => {
 
       {/* User Info & Logout */}
       <div className="p-4 border-t border-white/10">
-        
-
         <SidebarItem
           icon={<ArrowLeftOnRectangleIcon className="w-6 h-6" />}
           label="Déconnexion"
