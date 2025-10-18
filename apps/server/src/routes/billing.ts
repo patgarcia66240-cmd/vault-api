@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
-import { createCheckoutSession, handleWebhook } from '../services/billing'
+import { createCheckoutSession, handleWebhook, getUserInvoices } from '../services/billing'
 import { JWTPayload } from '../libs/jwt'
 
 export const billingRoutes = async (fastify: FastifyInstance) => {
@@ -15,6 +15,19 @@ export const billingRoutes = async (fastify: FastifyInstance) => {
       if (error instanceof Error && error.message === 'User already has PRO plan') {
         return reply.status(409).send({ error: 'User already has PRO plan' })
       }
+      return reply.status(500).send({ error: 'Internal server error' })
+    }
+  })
+
+  fastify.get('/invoices', {
+    preHandler: [fastify.authenticate]
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const user = request.user as JWTPayload
+      const invoices = await getUserInvoices(user.sub)
+      return reply.send({ invoices })
+    } catch (error) {
+      fastify.log.error(error)
       return reply.status(500).send({ error: 'Internal server error' })
     }
   })

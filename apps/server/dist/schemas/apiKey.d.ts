@@ -1,10 +1,13 @@
 import { z } from 'zod';
 export declare const createApiKeySchema: z.ZodObject<{
     name: z.ZodString;
+    value: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     name: string;
+    value?: string | undefined;
 }, {
     name: string;
+    value?: string | undefined;
 }>;
 export declare const revokeApiKeySchema: z.ZodObject<{
     id: z.ZodString;

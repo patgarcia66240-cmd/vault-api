@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApiKeys, useCreateApiKey, useRevokeApiKey } from '../lib/services/apiKeyService'
-import { useCurrentUser, useLogout } from '../lib/services/authService'
+import { useCurrentUser } from '../lib/services/authService'
 import { ApiKey, CreateApiKeyResponse } from '../lib/api'
 import { GlassCard } from '../components/GlassCard'
 import { Button } from '../components/Button'
@@ -178,7 +178,6 @@ export const Home: React.FC = () => {
   }
 
   const activeKeys = apiKeysData?.apiKeys.filter(k => !k.revoked) || []
-  const revokedKeys = apiKeysData?.apiKeys.filter(k => k.revoked) || []
 
   return (
     <div className="min-h-screen bg-gradient-radial">

@@ -1,7 +1,8 @@
 import React from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { clsx } from 'clsx'
-import { useLogout } from '../lib/services/authService'
+import { useLogout, useCurrentUser } from '../lib/services/authService'
+import { HomeIcon, KeyIcon, CogIcon, CreditCardIcon, ArrowLeftOnRectangleIcon } from '@heroicons/react/24/outline'
 
 type SidebarItemProps =
   | {
@@ -38,7 +39,8 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, href, isActive, 
         'text-left hover:bg-white/10',
         isActive
           ? 'bg-white/10 text-white border-l-4 border-base-yellow'
-          : 'text-white/70 hover:text-white'
+          : 'text-white/70 hover:text-white',
+        label === 'Tarifs' && 'bg-base-yellow/20 backdrop-blur-sm shadow-lg shadow-base-yellow/10'
       )}
     >
       <span className="text-xl">{icon}</span>
@@ -51,6 +53,7 @@ export const Sidebar: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const logout = useLogout()
+  const { data: user } = useCurrentUser()
 
   const handleLogout = () => {
     logout.mutate()
@@ -59,17 +62,27 @@ export const Sidebar: React.FC = () => {
 
   const sidebarItems = [
     {
-      icon: '🏠',
+      icon: <HomeIcon className="w-6 h-6" />,
       label: 'Accueil',
       href: '/dashboard'
     },
     {
-      icon: '🔗',
-      label: 'Liens',
-      href: '/liens'
+      icon: <KeyIcon className="w-6 h-6" />,
+      label: 'Clés API',
+      href: '/clés'
     },
     {
-      icon: '⚙️',
+      icon: <CreditCardIcon className="w-6 h-6" />,
+      label: 'Tarifs',
+      href: '/tarifs'
+    },
+    {
+      icon: <CreditCardIcon className="w-6 h-6" />,
+      label: 'Facturation',
+      href: '/facturation'
+    },
+    {
+      icon: <CogIcon className="w-6 h-6" />,
       label: 'Paramètres',
       href: '/parametres'
     }
@@ -89,7 +102,14 @@ export const Sidebar: React.FC = () => {
           </div>
         </div>
       </div>
-
+      <div className="mb-4 px-4">
+        <div className="bg-white/5 rounded-lg p-3">
+          <p className="text-white/60 text-xs mb-1">Connecté en tant que</p>
+          <p className="text-white text-sm font-medium truncate">
+            {user?.email || 'Utilisateur'}
+          </p>
+        </div>
+      </div>
       {/* Navigation */}
       <nav className="flex-1 p-4">
         <div className="space-y-2">
@@ -107,17 +127,10 @@ export const Sidebar: React.FC = () => {
 
       {/* User Info & Logout */}
       <div className="p-4 border-t border-white/10">
-        <div className="mb-4">
-          <div className="bg-white/5 rounded-lg p-3">
-            <p className="text-white/60 text-xs mb-1">Connecté en tant que</p>
-            <p className="text-white text-sm font-medium truncate">
-              user@example.com
-            </p>
-          </div>
-        </div>
+        
 
         <SidebarItem
-          icon="🚪"
+          icon={<ArrowLeftOnRectangleIcon className="w-6 h-6" />}
           label="Déconnexion"
           onClick={handleLogout}
           isActive={false}

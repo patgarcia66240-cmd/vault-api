@@ -19,10 +19,10 @@ export const Signup: React.FC = () => {
 
     const newErrors: Record<string, string> = {}
 
-    if (!email) newErrors.email = 'Email is required'
-    if (!password) newErrors.password = 'Password is required'
-    if (password.length < 8) newErrors.password = 'Password must be at least 8 characters'
-    if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match'
+    if (!email) newErrors.email = "L'email est requis"
+    if (!password) newErrors.password = 'Le mot de passe est requis'
+    if (password.length < 8) newErrors.password = 'Le mot de passe doit contenir au moins 8 caractères'
+    if (password !== confirmPassword) newErrors.confirmPassword = 'Les mots de passe ne correspondent pas'
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
@@ -33,7 +33,7 @@ export const Signup: React.FC = () => {
       await signup.mutateAsync({ email, password })
       navigate('/dashboard')
     } catch (error) {
-      setErrors({ general: 'Email already exists' })
+      setErrors({ general: 'Cet email existe déjà' })
     }
   }
 
@@ -42,8 +42,8 @@ export const Signup: React.FC = () => {
       <div className="w-full max-w-md animate-fade-in">
         <GlassCard className="p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
-            <p className="text-white/60">Start managing your API keys with Base44</p>
+            <h1 className="text-3xl font-bold text-white mb-2">Créer un compte</h1>
+            <p className="text-white/60">Commencez à gérer vos clés API avec Vault</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -56,7 +56,7 @@ export const Signup: React.FC = () => {
             <Input
               type="email"
               label="Email"
-              placeholder="you@example.com"
+              placeholder="votre@email.com"
               value={email}
               onChange={setEmail}
               error={errors.email}
@@ -65,7 +65,7 @@ export const Signup: React.FC = () => {
 
             <Input
               type="password"
-              label="Password"
+              label="Mot de passe"
               placeholder="••••••••"
               value={password}
               onChange={setPassword}
@@ -75,7 +75,7 @@ export const Signup: React.FC = () => {
 
             <Input
               type="password"
-              label="Confirm Password"
+              label="Confirmer le mot de passe"
               placeholder="••••••••"
               value={confirmPassword}
               onChange={setConfirmPassword}
@@ -88,15 +88,15 @@ export const Signup: React.FC = () => {
               className="w-full"
               loading={signup.isPending}
             >
-              Create Account
+              Créer le compte
             </Button>
           </form>
 
           <div className="mt-8 text-center">
             <p className="text-white/60">
-              Already have an account?{' '}
+              Vous avez déjà un compte ?{' '}
               <Link to="/login" className="text-base-yellow hover:text-base-yellow-dark transition-colors">
-                Sign in
+                Se connecter
               </Link>
             </p>
           </div>

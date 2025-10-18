@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { api, ApiKey, CreateApiKeyData, CreateApiKeyResponse, ApiKeysResponse } from '../api'
+import { api, CreateApiKeyData, CreateApiKeyResponse, ApiKeysResponse } from '../api'
 
 export const useApiKeys = () => {
   return useQuery({
@@ -30,5 +30,12 @@ export const useRevokeApiKey = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['apiKeys'] })
     },
+  })
+}
+
+export const useGetDecryptedApiKey = () => {
+  return useMutation({
+    mutationFn: (apiKeyId: string) =>
+      api.get(`/api/keys/${apiKeyId}/decrypt`).then(res => res.data),
   })
 }

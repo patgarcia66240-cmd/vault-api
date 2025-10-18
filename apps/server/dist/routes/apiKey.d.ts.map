@@ -1,1 +1,1 @@
-{"version":3,"file":"apiKey.d.ts","sourceRoot":"","sources":["../../src/routes/apiKey.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,eAAe,EAAgC,MAAM,SAAS,CAAA;AAIvE,eAAO,MAAM,YAAY,GAAU,SAAS,eAAe,kBA0C1D,CAAA"}
+{"version":3,"file":"apiKey.d.ts","sourceRoot":"","sources":["../../src/routes/apiKey.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,eAAe,EAAgC,MAAM,SAAS,CAAA;AAKvE,eAAO,MAAM,YAAY,GAAU,SAAS,eAAe,kBAwE1D,CAAA"}

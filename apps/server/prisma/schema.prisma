@@ -8,14 +8,15 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
+  id           String     @id @default(cuid())
+  email        String     @unique
   passwordHash String
-  plan         String   @default("FREE")
-  stripeId     String?  @unique
+  plan         String     @default("FREE")
+  stripeId     String?    @unique
   apiKeys      ApiKey[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  invoices     Invoice[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   @@map("users")
 }
@@ -35,4 +36,23 @@ model ApiKey {
   updatedAt     DateTime @updatedAt
 
   @@map("api_keys")
+}
+
+model Invoice {
+  id              String   @id @default(cuid())
+  userId          String
+  stripeInvoiceId String   @unique
+  amount          Int      // en centimes
+  currency        String   @default("usd")
+  status          String   // paid, open, void, draft, uncollectible
+  invoicePdf      String?  // URL vers le PDF Stripe
+  hostedInvoiceUrl String? // URL de la page de paiement
+  description     String?
+  periodStart     DateTime?
+  periodEnd       DateTime?
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("invoices")
 }

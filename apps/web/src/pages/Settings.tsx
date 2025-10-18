@@ -150,7 +150,7 @@ export const Settings: React.FC = () => {
                     {user.plan}
                   </span>
                   {user.plan === 'FREE' && (
-                    <Button variant="secondary" size="sm">
+                    <Button variant="secondary" >
                       Mettre à niveau vers PRO
                     </Button>
                   )}

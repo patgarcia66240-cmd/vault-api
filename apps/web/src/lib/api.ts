@@ -52,4 +52,5 @@ export interface LoginData {
 
 export interface CreateApiKeyData {
   name: string
+  value?: string
 }

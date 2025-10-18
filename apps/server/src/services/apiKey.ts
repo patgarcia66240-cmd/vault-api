@@ -4,6 +4,7 @@ import {
   hashAPIKey,
   extractAPIKeyInfo,
   encryptAPIKey,
+  decryptAPIKey,
   getMasterKey
 } from '../libs/crypto'
 import { CreateApiKeyInput } from '../schemas/apiKey'
@@ -11,7 +12,8 @@ import { CreateApiKeyInput } from '../schemas/apiKey'
 const prisma = new PrismaClient()
 
 export const createApiKey = async (userId: string, input: CreateApiKeyInput) => {
-  const { name } = input
+  const { name, value } = input
+  const apiKey = value || generateAPIKey()
 
   const user = await prisma.user.findUnique({
     where: { id: userId }
@@ -34,7 +36,7 @@ export const createApiKey = async (userId: string, input: CreateApiKeyInput) => 
     }
   }
 
-  const apiKey = generateAPIKey()
+  // apiKey is already set above as value || generateAPIKey()
   const apiKeyHash = hashAPIKey(apiKey)
   const { prefix, last4 } = extractAPIKeyInfo(apiKey)
 
@@ -96,6 +98,35 @@ export const revokeApiKey = async (userId: string, apiKeyId: string) => {
   })
 
   return { success: true }
+}
+
+export const getDecryptedApiKey = async (userId: string, apiKeyId: string) => {
+  const apiKey = await prisma.apiKey.findFirst({
+    where: {
+      id: apiKeyId,
+      userId,
+      revoked: false // Only allow decrypting active keys
+    }
+  })
+
+  if (!apiKey) {
+    throw new Error('API key not found')
+  }
+
+  const masterKey = getMasterKey()
+  const encrypted = {
+    ciphertext: apiKey.encCiphertext,
+    nonce: apiKey.encNonce
+  }
+
+  const decryptedKey = decryptAPIKey(encrypted, masterKey)
+
+  return {
+    apiKey: decryptedKey,
+    name: apiKey.name,
+    prefix: apiKey.prefix,
+    last4: apiKey.last4
+  }
 }
 
 export const validateApiKey = async (apiKeyHash: string) => {

@@ -4,6 +4,8 @@ import cookie from '@fastify/cookie';
 import jwt from '@fastify/jwt';
 import rateLimit from '@fastify/rate-limit';
 import { authRoutes } from './routes/auth';
+import { apiKeyRoutes } from './routes/apiKey';
+import { billingRoutes } from './routes/billing';
 export const createServer = async () => {
     const server = Fastify({
         logger: {
@@ -70,6 +72,8 @@ export const createServer = async () => {
     });
     // Register routes
     await server.register(authRoutes, { prefix: '/api/auth' });
+    await server.register(apiKeyRoutes, { prefix: '/api' });
+    await server.register(billingRoutes, { prefix: '/api/billing' });
     return server;
 };
 //# sourceMappingURL=server.js.map

@@ -18,8 +18,8 @@ export const Login: React.FC = () => {
 
     const newErrors: Record<string, string> = {}
 
-    if (!email) newErrors.email = 'Email is required'
-    if (!password) newErrors.password = 'Password is required'
+    if (!email) newErrors.email = "L'email est requis"
+    if (!password) newErrors.password = 'Le mot de passe est requis'
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
@@ -30,7 +30,7 @@ export const Login: React.FC = () => {
       await login.mutateAsync({ email, password })
       navigate('/dashboard')
     } catch (error) {
-      setErrors({ general: 'Invalid email or password' })
+      setErrors({ general: 'Email ou mot de passe invalide' })
     }
   }
 
@@ -39,8 +39,8 @@ export const Login: React.FC = () => {
       <div className="w-full max-w-md animate-fade-in">
         <GlassCard className="p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-            <p className="text-white/60">Sign in to your Base44 account</p>
+            <h1 className="text-3xl font-bold text-white mb-2">Bienvenue</h1>
+            <p className="text-white/60">Connectez-vous à votre compte Vault</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -53,7 +53,7 @@ export const Login: React.FC = () => {
             <Input
               type="email"
               label="Email"
-              placeholder="you@example.com"
+              placeholder="votre@email.com"
               value={email}
               onChange={setEmail}
               error={errors.email}
@@ -62,7 +62,7 @@ export const Login: React.FC = () => {
 
             <Input
               type="password"
-              label="Password"
+              label="Mot de passe"
               placeholder="••••••••"
               value={password}
               onChange={setPassword}
@@ -75,15 +75,15 @@ export const Login: React.FC = () => {
               className="w-full"
               loading={login.isPending}
             >
-              Sign In
+              Se connecter
             </Button>
           </form>
 
           <div className="mt-8 text-center">
             <p className="text-white/60">
-              Don't have an account?{' '}
+              Vous n'avez pas de compte ?{' '}
               <Link to="/signup" className="text-base-yellow hover:text-base-yellow-dark transition-colors">
-                Sign up
+                S'inscrire
               </Link>
             </p>
           </div>

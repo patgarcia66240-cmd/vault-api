@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
-import { createApiKey, getUserApiKeys, revokeApiKey } from '../services/apiKey'
+import { createApiKey, getUserApiKeys, revokeApiKey, getDecryptedApiKey } from '../services/apiKey'
 import { createApiKeySchema } from '../schemas/apiKey'
 import { JWTPayload } from '../libs/jwt'
 
@@ -49,6 +49,24 @@ export const apiKeyRoutes = async (fastify: FastifyInstance) => {
       const user = request.user as JWTPayload
       await revokeApiKey(user.sub, (request.params as { id: string }).id)
       return reply.send({ success: true })
+    } catch (error) {
+      fastify.log.error(error)
+      if (error instanceof Error && error.message === 'API key not found') {
+        return reply.status(404).send({ error: 'API key not found' })
+      }
+      return reply.status(500).send({ error: 'Internal server error' })
+    }
+  })
+
+  fastify.get('/keys/:id/decrypt', {
+    preHandler: [fastify.authenticate]
+  }, async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const user = request.user as JWTPayload
+      const apiKeyId = (request.params as { id: string }).id
+
+      const result = await getDecryptedApiKey(user.sub, apiKeyId)
+      return reply.send(result)
     } catch (error) {
       fastify.log.error(error)
       if (error instanceof Error && error.message === 'API key not found') {

@@ -18,6 +18,12 @@ export declare const getUserApiKeys: (userId: string) => Promise<{
 export declare const revokeApiKey: (userId: string, apiKeyId: string) => Promise<{
     success: boolean;
 }>;
+export declare const getDecryptedApiKey: (userId: string, apiKeyId: string) => Promise<{
+    apiKey: string;
+    name: string;
+    prefix: string;
+    last4: string;
+}>;
 export declare const validateApiKey: (apiKeyHash: string) => Promise<{
     apiKey: {
         id: string;

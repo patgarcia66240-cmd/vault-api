@@ -4,8 +4,15 @@ import Stripe from 'stripe'
 const prisma = new PrismaClient()
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-06-20'
+  apiVersion: '2023-10-16'
 })
+
+export const getUserInvoices = async (userId: string) => {
+  return await prisma.invoice.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' }
+  })
+}
 
 export const createCheckoutSession = async (userId: string, userEmail: string) => {
   const user = await prisma.user.findUnique({
@@ -70,15 +77,71 @@ export const handleWebhook = async (payload: Buffer, signature: string) => {
       break
     }
 
-    case 'invoice.payment_failed': {
+    case 'invoice.payment_succeeded': {
       const invoice = event.data.object as Stripe.Invoice
       const customerId = invoice.customer as string
 
+      // Trouver l'utilisateur par stripeId
       const user = await prisma.user.findUnique({
         where: { stripeId: customerId }
       })
 
       if (user) {
+        // Créer ou mettre à jour la facture dans notre DB
+        await prisma.invoice.upsert({
+          where: { stripeInvoiceId: invoice.id },
+          update: {
+            status: 'paid',
+            amount: invoice.amount_paid,
+            currency: invoice.currency,
+            invoicePdf: invoice.invoice_pdf,
+            hostedInvoiceUrl: invoice.hosted_invoice_url,
+            periodStart: invoice.period_start ? new Date(invoice.period_start * 1000) : null,
+            periodEnd: invoice.period_end ? new Date(invoice.period_end * 1000) : null,
+          },
+          create: {
+            userId: user.id,
+            stripeInvoiceId: invoice.id,
+            amount: invoice.amount_paid,
+            currency: invoice.currency,
+            status: 'paid',
+            invoicePdf: invoice.invoice_pdf,
+            hostedInvoiceUrl: invoice.hosted_invoice_url,
+            periodStart: invoice.period_start ? new Date(invoice.period_start * 1000) : null,
+            periodEnd: invoice.period_end ? new Date(invoice.period_end * 1000) : null,
+          }
+        })
+      }
+      break
+    }
+
+    case 'invoice.payment_failed': {
+      const invoice = event.data.object as Stripe.Invoice
+      const customerId = invoice.customer as string
+
+      // Trouver l'utilisateur par stripeId
+      const user = await prisma.user.findUnique({
+        where: { stripeId: customerId }
+      })
+
+      if (user) {
+        // Créer la facture échouée
+        await prisma.invoice.upsert({
+          where: { stripeInvoiceId: invoice.id },
+          update: {
+            status: 'open',
+            amount: invoice.amount_due,
+          },
+          create: {
+            userId: user.id,
+            stripeInvoiceId: invoice.id,
+            amount: invoice.amount_due,
+            currency: invoice.currency,
+            status: 'open',
+            hostedInvoiceUrl: invoice.hosted_invoice_url,
+          }
+        })
+
         await prisma.user.update({
           where: { id: user.id },
           data: { plan: 'FREE' }

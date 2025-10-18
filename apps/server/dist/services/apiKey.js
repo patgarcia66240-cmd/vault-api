@@ -1,8 +1,9 @@
 import { PrismaClient } from '@prisma/client';
-import { generateAPIKey, hashAPIKey, extractAPIKeyInfo, encryptAPIKey, getMasterKey } from '../libs/crypto';
+import { generateAPIKey, hashAPIKey, extractAPIKeyInfo, encryptAPIKey, decryptAPIKey, getMasterKey } from '../libs/crypto';
 const prisma = new PrismaClient();
 export const createApiKey = async (userId, input) => {
-    const { name } = input;
+    const { name, value } = input;
+    const apiKey = value || generateAPIKey();
     const user = await prisma.user.findUnique({
         where: { id: userId }
     });
@@ -20,7 +21,7 @@ export const createApiKey = async (userId, input) => {
             throw new Error('Free plan limited to 3 API keys');
         }
     }
-    const apiKey = generateAPIKey();
+    // apiKey is already set above as value || generateAPIKey()
     const apiKeyHash = hashAPIKey(apiKey);
     const { prefix, last4 } = extractAPIKeyInfo(apiKey);
     const masterKey = getMasterKey();
@@ -74,6 +75,30 @@ export const revokeApiKey = async (userId, apiKeyId) => {
         data: { revoked: true }
     });
     return { success: true };
+};
+export const getDecryptedApiKey = async (userId, apiKeyId) => {
+    const apiKey = await prisma.apiKey.findFirst({
+        where: {
+            id: apiKeyId,
+            userId,
+            revoked: false // Only allow decrypting active keys
+        }
+    });
+    if (!apiKey) {
+        throw new Error('API key not found');
+    }
+    const masterKey = getMasterKey();
+    const encrypted = {
+        ciphertext: apiKey.encCiphertext,
+        nonce: apiKey.encNonce
+    };
+    const decryptedKey = decryptAPIKey(encrypted, masterKey);
+    return {
+        apiKey: decryptedKey,
+        name: apiKey.name,
+        prefix: apiKey.prefix,
+        last4: apiKey.last4
+    };
 };
 export const validateApiKey = async (apiKeyHash) => {
     const apiKey = await prisma.apiKey.findUnique({

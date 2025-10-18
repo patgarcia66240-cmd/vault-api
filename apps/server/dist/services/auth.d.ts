@@ -8,7 +8,7 @@ export declare const signup: (input: SignupInput) => Promise<{
     };
 }>;
 export declare const login: (input: LoginInput, jwt: any) => Promise<{
-    token: any;
+    token: string;
     user: {
         id: string;
         email: string;
