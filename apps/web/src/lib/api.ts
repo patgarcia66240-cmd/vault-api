@@ -18,9 +18,19 @@ export interface User {
   stripeId?: string
 }
 
+export type Provider = 'CUSTOM' | 'SUPABASE'
+
+export interface SupabaseConfig {
+  url: string
+  anonKey: string
+  serviceRoleKey: string
+}
+
 export interface ApiKey {
   id: string
   name: string
+  provider: Provider
+  providerConfig?: SupabaseConfig
   prefix: string
   last4: string
   revoked: boolean
@@ -34,6 +44,8 @@ export interface CreateApiKeyResponse {
   last4: string
   name: string
   createdAt: string
+  provider?: Provider
+  providerConfig?: SupabaseConfig
 }
 
 export interface ApiKeysResponse {
@@ -53,4 +65,6 @@ export interface LoginData {
 export interface CreateApiKeyData {
   name: string
   value?: string
+  provider?: Provider
+  providerConfig?: SupabaseConfig
 }

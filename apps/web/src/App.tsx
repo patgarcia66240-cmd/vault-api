@@ -40,7 +40,7 @@ function App() {
             >
               <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Home />} />
-              <Route path="/clés" element={<Keys />} />
+              <Route path="/keys" element={<Keys />} />
               <Route path="/parametres" element={<Settings />} />
               <Route path="/tarifs" element={<Pricing />} />
               <Route path="/facturation" element={<Billing />} />

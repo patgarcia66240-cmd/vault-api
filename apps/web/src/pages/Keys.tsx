@@ -2,9 +2,105 @@ import React, { useState } from 'react'
 import { GlassCard } from '../components/GlassCard'
 import { Button } from '../components/Button'
 import { Input } from '../components/Input'
+import { Select } from '../components/Select'
 import { useApiKeys, useCreateApiKey, useRevokeApiKey, useGetDecryptedApiKey } from '../lib/services/apiKeyService'
-import { ApiKey } from '../lib/api'
-import {  TrashIcon, ClipboardDocumentIcon, CheckIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { ApiKey, Provider, SupabaseConfig } from '../lib/api'
+import { TrashIcon, ClipboardDocumentIcon, CheckIcon, PlusIcon, CloudIcon, ExclamationTriangleIcon, LockClosedIcon } from '@heroicons/react/24/outline'
+
+const SupabaseCard: React.FC<{
+  apiKey: ApiKey;
+  onRevoke: (id: string) => void;
+}> = ({ apiKey, onRevoke }) => {
+  const config = apiKey.providerConfig as SupabaseConfig
+
+  const copyToClipboard = async (text: string) => {
+    await navigator.clipboard.writeText(text)
+  }
+
+  return (
+    <GlassCard hover className="p-6 border border-green-500/30">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2 bg-green-500/20 rounded-lg">
+          <CloudIcon className="w-6 h-6 text-green-400" />
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-white">{apiKey.name}</h3>
+            <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full font-medium">
+              Supabase
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-3 mb-4">
+        <div>
+          <label className="block text-white/60 text-xs mb-1">URL du projet</label>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 px-3 py-2 bg-white/5 rounded-lg text-white/80 text-sm truncate">
+              {config?.url || 'N/A'}
+            </code>
+            <button
+              onClick={() => config?.url && copyToClipboard(config.url)}
+              className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+              title="Copier l'URL"
+            >
+              <ClipboardDocumentIcon className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-white/60 text-xs mb-1">Anon Key</label>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 px-3 py-2 bg-white/5 rounded-lg text-white/80 text-sm truncate">
+              {config?.anonKey ? `${config.anonKey.slice(0, 8)}...${config.anonKey.slice(-4)}` : 'N/A'}
+            </code>
+            <button
+              onClick={() => config?.anonKey && copyToClipboard(config.anonKey)}
+              className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+              title="Copier l'anon key"
+            >
+              <ClipboardDocumentIcon className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-white/60 text-xs mb-1">Service Role Key</label>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 px-3 py-2 bg-white/5 rounded-lg text-white/80 text-sm truncate">
+              {config?.serviceRoleKey ? `${config.serviceRoleKey.slice(0, 8)}...${config.serviceRoleKey.slice(-4)}` : 'N/A'}
+            </code>
+            <button
+              onClick={() => config?.serviceRoleKey && copyToClipboard(config.serviceRoleKey)}
+              className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+              title="Copier la service role key"
+            >
+              <ClipboardDocumentIcon className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between pt-4 border-t border-white/10">
+        <span className="text-white/40 text-xs">
+          Créée le {new Date(apiKey.createdAt).toLocaleDateString()}
+        </span>
+        {!apiKey.revoked && (
+          <button
+            onClick={() => onRevoke(apiKey.id)}
+            className="p-2 text-white/60 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+            title="Révoquer"
+          >
+            <TrashIcon className="w-5 h-5" />
+          </button>
+        )}
+      </div>
+    </GlassCard>
+  )
+}
+
 
 const ApiKeyCard: React.FC<{
   apiKey: ApiKey;
@@ -77,31 +173,59 @@ const ApiKeyCard: React.FC<{
 const AddApiKeyModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
-  onSave: (name: string, value: string) => void;
+  onSave: (data: { name: string; value?: string; provider?: Provider; providerConfig?: SupabaseConfig }) => void;
   error?: string;
   isLoading?: boolean;
 }> = ({ isOpen, onClose, onSave, error, isLoading }) => {
   const [name, setName] = useState('')
   const [value, setValue] = useState('')
+  const [provider, setProvider] = useState<Provider>('CUSTOM')
+  const [supabaseUrl, setSupabaseUrl] = useState('')
+  const [supabaseAnonKey, setSupabaseAnonKey] = useState('')
+  const [supabaseServiceRoleKey, setSupabaseServiceRoleKey] = useState('')
 
   if (!isOpen) return null
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.trim() || !value.trim()) return
 
-    onSave(name.trim(), value.trim())
+    if (!name.trim()) return
+
+    if (provider === 'SUPABASE') {
+      if (!supabaseUrl.trim() || !supabaseAnonKey.trim() || !supabaseServiceRoleKey.trim()) return
+
+      onSave({
+        name: name.trim(),
+        provider: 'SUPABASE',
+        providerConfig: {
+          url: supabaseUrl.trim(),
+          anonKey: supabaseAnonKey.trim(),
+          serviceRoleKey: supabaseServiceRoleKey.trim()
+        }
+      })
+    } else {
+      if (!value.trim()) return
+      onSave({
+        name: name.trim(),
+        value: value.trim(),
+        provider: 'CUSTOM'
+      })
+    }
   }
 
   const handleClose = () => {
     setName('')
     setValue('')
+    setProvider('CUSTOM')
+    setSupabaseUrl('')
+    setSupabaseAnonKey('')
+    setSupabaseServiceRoleKey('')
     onClose()
   }
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <GlassCard className="w-full max-w-md animate-slide-up">
+      <GlassCard className="w-full max-w-lg animate-slide-up">
         <div className="p-6">
           <h3 className="text-xl font-bold text-white mb-4">
             Créer une nouvelle clé API
@@ -119,14 +243,66 @@ const AddApiKeyModal: React.FC<{
             </div>
 
             <div>
-              <label className="block text-white/80 text-sm mb-2">Valeur de la clé API</label>
-              <Input
-                placeholder="Entrez votre clé API..."
-                value={value}
-                onChange={setValue}
-                required
+              <label className="block text-white/80 text-sm mb-2">Type de fournisseur</label>
+              <Select
+                value={provider}
+                onChange={(value) => setProvider(value as Provider)}
+                options={[
+                  { value: 'CUSTOM', label: 'Clé personnalisée' },
+                  { value: 'SUPABASE', label: 'Supabase' }
+                ]}
               />
             </div>
+
+            {provider === 'CUSTOM' && (
+              <div>
+                <label className="block text-white/80 text-sm mb-2">Valeur de la clé API</label>
+                <Input
+                  placeholder="Entrez votre clé API..."
+                  value={value}
+                  onChange={setValue}
+                  required
+                />
+              </div>
+            )}
+
+            {provider === 'SUPABASE' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-white/80 text-sm mb-2">URL du projet Supabase</label>
+                  <Input
+                    placeholder="https://xxxxxxxx.supabase.co"
+                    value={supabaseUrl}
+                    onChange={setSupabaseUrl}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-white/80 text-sm mb-2">Anon Key (publique)</label>
+                  <Input
+                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    value={supabaseAnonKey}
+                    onChange={setSupabaseAnonKey}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-white/80 text-sm mb-2">Service Role Key (privée)</label>
+                  <Input
+                    placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    value={supabaseServiceRoleKey}
+                    onChange={setSupabaseServiceRoleKey}
+                    required
+                  />
+                  <p className="text-white/40 text-xs mt-1 flex items-center gap-1">
+                    <ExclamationTriangleIcon className="w-3 h-3" />
+                    Ne partagez jamais cette clé. Elle donne un accès administrateur complet.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {error && (
               <div className="text-red-400 text-sm">
@@ -134,9 +310,19 @@ const AddApiKeyModal: React.FC<{
               </div>
             )}
 
-            <p className="text-white/60 text-sm">
-              ⚠️ La clé complète sera affichée une seule fois après création. Copiez-la et stockez-la en lieu sûr.
-            </p>
+            {provider === 'CUSTOM' && (
+              <p className="text-white/60 text-sm flex items-center gap-2">
+                <ExclamationTriangleIcon className="w-4 h-4" />
+                La clé complète sera affichée une seule fois après création. Copiez-la et stockez-la en lieu sûr.
+              </p>
+            )}
+
+            {provider === 'SUPABASE' && (
+              <p className="text-green-400 text-sm flex items-center gap-2">
+                <LockClosedIcon className="w-4 h-4" />
+                Les clés Supabase seront chiffrées et stockées en toute sécurité.
+              </p>
+            )}
 
             <div className="flex gap-3 pt-4">
               <Button
@@ -214,8 +400,9 @@ const RevealApiKeyModal: React.FC<{
               </div>
             </div>
 
-            <p className="text-red-400 text-sm">
-              ⚠️ Cette clé ne sera plus affichée. Copiez-la maintenant !
+            <p className="text-red-400 text-sm flex items-center gap-2">
+              <ExclamationTriangleIcon className="w-4 h-4" />
+              Cette clé ne sera plus affichée. Copiez-la maintenant !
             </p>
 
             <div className="pt-4">
@@ -248,13 +435,19 @@ export const Keys: React.FC = () => {
   const createApiKeyMutation = useCreateApiKey()
   const revokeApiKeyMutation = useRevokeApiKey()
 
-  const handleCreateApiKey = (name: string, value: string) => {
+  const handleCreateApiKey = (data: { name: string; value?: string; provider?: Provider; providerConfig?: SupabaseConfig }) => {
     setCreationError('')
-    createApiKeyMutation.mutate({ name, value }, {
+    createApiKeyMutation.mutate(data, {
       onSuccess: (response) => {
-        setNewApiKey(response)
-        setShowModal(false)
-        setCreationError('')
+        // Only show reveal modal for custom keys
+        if (data.provider === 'SUPABASE') {
+          setShowModal(false)
+          setCreationError('')
+        } else {
+          setNewApiKey(response)
+          setShowModal(false)
+          setCreationError('')
+        }
       },
       onError: (error: any) => {
         console.error('Error creating API key:', error)
@@ -360,11 +553,19 @@ export const Keys: React.FC = () => {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {apiKeys.map((apiKey) => (
-                <ApiKeyCard
-                  key={apiKey.id}
-                  apiKey={apiKey}
-                  onRevoke={handleRevokeApiKey}
-                />
+                apiKey.provider === 'SUPABASE' ? (
+                  <SupabaseCard
+                    key={apiKey.id}
+                    apiKey={apiKey}
+                    onRevoke={handleRevokeApiKey}
+                  />
+                ) : (
+                  <ApiKeyCard
+                    key={apiKey.id}
+                    apiKey={apiKey}
+                    onRevoke={handleRevokeApiKey}
+                  />
+                )
               ))}
             </div>
           )}

@@ -39,8 +39,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, href, isActive, 
         'text-left hover:bg-white/10',
         isActive
           ? 'bg-white/10 text-white border-l-4 border-base-yellow'
-          : 'text-white/70 hover:text-white',
-        label === 'Tarifs' && 'bg-base-yellow/20 backdrop-blur-sm shadow-lg shadow-base-yellow/10'
+          : 'text-white/70 hover:text-white'
       )}
     >
       <span className="text-xl">{icon}</span>
@@ -69,7 +68,7 @@ export const Sidebar: React.FC = () => {
     {
       icon: <KeyIcon className="w-6 h-6" />,
       label: 'Clés API',
-      href: '/clés'
+      href: '/keys'
     },
     {
       icon: <CreditCardIcon className="w-6 h-6" />,

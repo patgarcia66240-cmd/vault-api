@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { GlassCard } from '../components/GlassCard'
 import { Button } from '../components/Button'
 import { Input } from '../components/Input'
+import { Select } from '../components/Select'
 import { useCurrentUser, useLogout } from '../lib/services/authService'
 
 const SettingsSection: React.FC<{
@@ -234,15 +235,15 @@ export const Settings: React.FC = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-white/80 text-sm mb-2">Environnement par défaut</label>
-                <select
+                <Select
                   value={defaultEnvironment}
-                  onChange={(e) => setDefaultEnvironment(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-base-yellow/50"
-                >
-                  <option value="development">Development</option>
-                  <option value="staging">Staging</option>
-                  <option value="production">Production</option>
-                </select>
+                  onChange={setDefaultEnvironment}
+                  options={[
+                    { value: 'development', label: 'Development' },
+                    { value: 'staging', label: 'Staging' },
+                    { value: 'production', label: 'Production' }
+                  ]}
+                />
               </div>
               <ToggleSwitch
                 label="Rotation automatique des clés"

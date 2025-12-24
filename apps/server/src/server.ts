@@ -24,11 +24,7 @@ export const createServer = async (): Promise<FastifyInstance<Server>> => {
 
   // Register plugins
   await server.register(cors, {
-    origin: [
-      process.env.WEB_BASE_URL || 'http://localhost:5173',
-      'http://localhost:5174',
-      'http://localhost:5173'
-    ],
+    origin: ['http://localhost:5173', 'http://localhost:5174', process.env.WEB_BASE_URL || 'http://localhost:5173'],
     credentials: true
   })
 
@@ -64,10 +60,10 @@ export const createServer = async (): Promise<FastifyInstance<Server>> => {
   server.setErrorHandler((error, request, reply) => {
     server.log.error(error)
 
-    if (error.validation) {
+    if (error instanceof Error && 'validation' in error) {
       reply.status(400).send({
         error: 'Validation Error',
-        details: error.validation
+        details: (error as any).validation
       })
       return
     }
@@ -83,9 +79,9 @@ export const createServer = async (): Promise<FastifyInstance<Server>> => {
   })
 
   // Register routes
-  await server.register(authRoutes, { prefix: '/api/auth' })
-  await server.register(apiKeyRoutes, { prefix: '/api' })
-  await server.register(billingRoutes, { prefix: '/api/billing' })
+  server.register(authRoutes, { prefix: '/api/auth' })
+  server.register(apiKeyRoutes, { prefix: '/api' })
+  server.register(billingRoutes, { prefix: '/api/billing' })
 
   return server
 }

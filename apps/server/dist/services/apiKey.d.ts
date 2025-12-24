@@ -4,16 +4,32 @@ export declare const createApiKey: (userId: string, input: CreateApiKeyInput) =>
     prefix: string;
     last4: string;
     name: string;
+    provider: "SUPABASE";
+    providerConfig: {
+        url: string;
+        anonKey: string;
+        serviceRoleKey: string;
+    };
     createdAt: Date;
+} | {
+    apiKey: string;
+    prefix: string;
+    last4: string;
+    name: string;
+    provider: string;
+    createdAt: Date;
+    providerConfig?: undefined;
 }>;
 export declare const getUserApiKeys: (userId: string) => Promise<{
     id: string;
-    createdAt: Date;
-    updatedAt: Date;
     name: string;
+    provider: string;
+    providerConfig: any;
     prefix: string;
     last4: string;
     revoked: boolean;
+    createdAt: Date;
+    updatedAt: Date;
 }[]>;
 export declare const revokeApiKey: (userId: string, apiKeyId: string) => Promise<{
     success: boolean;

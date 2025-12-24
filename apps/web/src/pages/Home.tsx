@@ -6,12 +6,13 @@ import { ApiKey, CreateApiKeyResponse } from '../lib/api'
 import { GlassCard } from '../components/GlassCard'
 import { Button } from '../components/Button'
 import { Input } from '../components/Input'
+import { KeyIcon, ChartBarIcon, SparklesIcon, ClipboardDocumentIcon, CheckIcon, TrashIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 
 const StatsCard: React.FC<{
   title: string
   value: string | number
   subtitle?: string
-  icon: string
+  icon: React.ReactNode
   color?: string
 }> = ({ title, value, subtitle, icon, color = 'base-yellow' }) => {
   return (
@@ -41,18 +42,23 @@ const ApiKeyCard: React.FC<{ apiKey: ApiKey; onRevoke: (id: string) => void }> =
   return (
     <GlassCard hover className="p-6">
       <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-white mb-1">{apiKey.name}</h3>
-          <p className="text-sm text-white/60">
-            Created: {new Date(apiKey.createdAt).toLocaleDateString()}
-          </p>
+        <div className="flex items-center gap-3">
+          <div className={`p-2 rounded-lg ${apiKey.revoked ? 'bg-red-500/20' : 'bg-base-yellow/20'}`}>
+            <KeyIcon className={`w-5 h-5 ${apiKey.revoked ? 'text-red-400' : 'text-base-yellow'}`} />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-1">{apiKey.name}</h3>
+            <p className="text-sm text-white/60">
+              Créée le {new Date(apiKey.createdAt).toLocaleDateString()}
+            </p>
+          </div>
         </div>
         <div className={`px-3 py-1 rounded-full text-xs font-medium ${
           apiKey.revoked
             ? 'bg-red-500/20 text-red-300 border border-red-500/30'
             : 'bg-green-500/20 text-green-300 border border-green-500/30'
         }`}>
-          {apiKey.revoked ? 'Revoked' : 'Active'}
+          {apiKey.revoked ? 'Révoquée' : 'Active'}
         </div>
       </div>
 
@@ -63,10 +69,10 @@ const ApiKeyCard: React.FC<{ apiKey: ApiKey; onRevoke: (id: string) => void }> =
           </code>
           <button
             onClick={handleCopy}
-            className="text-white/60 hover:text-white transition-colors"
-            title="Copy prefix"
+            className="text-white/60 hover:text-white transition-colors p-1"
+            title="Copier le préfixe"
           >
-            {copied ? '✓' : '📋'}
+            {copied ? <CheckIcon className="w-5 h-5" /> : <ClipboardDocumentIcon className="w-5 h-5" />}
           </button>
         </div>
       </div>
@@ -75,9 +81,10 @@ const ApiKeyCard: React.FC<{ apiKey: ApiKey; onRevoke: (id: string) => void }> =
         <Button
           variant="danger"
           onClick={() => onRevoke(apiKey.id)}
-          className="w-full"
+          className="w-full flex items-center justify-center gap-2"
         >
-          Revoke Key
+          <TrashIcon className="w-4 h-4" />
+          Révoquer la clé
         </Button>
       )}
     </GlassCard>
@@ -103,11 +110,15 @@ const NewApiKeyModal: React.FC<{
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <GlassCard className="w-full max-w-md animate-slide-up">
         <div className="p-6">
-          <h3 className="text-xl font-bold text-white mb-4">API Key Created!</h3>
+          <div className="flex items-center gap-2 mb-4">
+            <CheckIcon className="w-6 h-6 text-green-400" />
+            <h3 className="text-xl font-bold text-white">Clé API créée avec succès !</h3>
+          </div>
 
           <div className="mb-4">
-            <p className="text-white/60 text-sm mb-2">
-              Copy this key now. You won't be able to see it again.
+            <p className="text-red-400 text-sm flex items-center gap-2">
+              <ExclamationTriangleIcon className="w-4 h-4" />
+              Copiez cette clé maintenant. Vous ne pourrez plus la voir.
             </p>
           </div>
 
@@ -119,16 +130,26 @@ const NewApiKeyModal: React.FC<{
               <Button
                 variant="secondary"
                 onClick={handleCopy}
-                className="flex-shrink-0"
+                className="flex-shrink-0 flex items-center gap-2"
               >
-                {copied ? '✓' : 'Copy'}
+                {copied ? (
+                  <>
+                    <CheckIcon className="w-4 h-4" />
+                    Copié
+                  </>
+                ) : (
+                  <>
+                    <ClipboardDocumentIcon className="w-4 h-4" />
+                    Copier
+                  </>
+                )}
               </Button>
             </div>
           </div>
 
           <div className="flex gap-3">
             <Button onClick={onClose} className="flex-1">
-              Done
+              J'ai copié la clé
             </Button>
           </div>
         </div>
@@ -211,21 +232,21 @@ export const Home: React.FC = () => {
               title="Clés actives"
               value={activeKeys.length}
               subtitle={user.plan === 'FREE' ? `${activeKeys.length}/3 utilisées` : 'Illimitées'}
-              icon="🔑"
+              icon={<KeyIcon className="w-8 h-8" />}
               color="green-400"
             />
             <StatsCard
               title="Clés totales"
               value={apiKeysData?.apiKeys.length || 0}
               subtitle="Créées depuis le début"
-              icon="📊"
+              icon={<ChartBarIcon className="w-8 h-8" />}
               color="blue-400"
             />
             <StatsCard
               title="Plan actuel"
               value={user.plan}
               subtitle={user.plan === 'FREE' ? 'Mise à niveau disponible' : 'Toutes les fonctionnalités'}
-              icon="⭐"
+              icon={<SparklesIcon className="w-8 h-8" />}
               color={user.plan === 'PRO' ? 'purple-400' : 'base-yellow'}
             />
           </div>

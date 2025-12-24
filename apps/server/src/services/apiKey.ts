@@ -12,8 +12,7 @@ import { CreateApiKeyInput } from '../schemas/apiKey'
 const prisma = new PrismaClient()
 
 export const createApiKey = async (userId: string, input: CreateApiKeyInput) => {
-  const { name, value } = input
-  const apiKey = value || generateAPIKey()
+  const { name, value, provider = 'CUSTOM', providerConfig } = input
 
   const user = await prisma.user.findUnique({
     where: { id: userId }
@@ -36,7 +35,45 @@ export const createApiKey = async (userId: string, input: CreateApiKeyInput) => 
     }
   }
 
-  // apiKey is already set above as value || generateAPIKey()
+  // Handle Supabase provider
+  if (provider === 'SUPABASE') {
+    if (!providerConfig) {
+      throw new Error('Provider config is required for Supabase')
+    }
+
+    // Use anonKey as the main key value for hash/encryption
+    const apiKey = providerConfig.anonKey
+    const apiKeyHash = hashAPIKey(apiKey)
+    const { prefix, last4 } = extractAPIKeyInfo(apiKey)
+
+    await prisma.apiKey.create({
+      data: {
+        userId,
+        name,
+        provider,
+        providerConfig: JSON.stringify(providerConfig),
+        prefix,
+        last4,
+        hash: apiKeyHash,
+        encCiphertext: Buffer.from([]),
+        encNonce: Buffer.from([])
+      }
+    })
+
+    return {
+      apiKey: providerConfig.anonKey,
+      prefix,
+      last4,
+      name,
+      provider,
+      providerConfig,
+      createdAt: new Date()
+    }
+  }
+
+  // Handle CUSTOM provider
+  const apiKey = value || generateAPIKey()
+
   const apiKeyHash = hashAPIKey(apiKey)
   const { prefix, last4 } = extractAPIKeyInfo(apiKey)
 
@@ -47,6 +84,7 @@ export const createApiKey = async (userId: string, input: CreateApiKeyInput) => 
     data: {
       userId,
       name,
+      provider: 'CUSTOM',
       prefix,
       last4,
       hash: apiKeyHash,
@@ -60,24 +98,28 @@ export const createApiKey = async (userId: string, input: CreateApiKeyInput) => 
     prefix,
     last4,
     name,
+    provider: 'CUSTOM',
     createdAt: new Date()
   }
 }
 
 export const getUserApiKeys = async (userId: string) => {
-  return await prisma.apiKey.findMany({
+  const apiKeys = await prisma.apiKey.findMany({
     where: { userId },
-    select: {
-      id: true,
-      name: true,
-      prefix: true,
-      last4: true,
-      revoked: true,
-      createdAt: true,
-      updatedAt: true
-    },
     orderBy: { createdAt: 'desc' }
   })
+
+  return apiKeys.map(key => ({
+    id: key.id,
+    name: key.name,
+    provider: key.provider,
+    providerConfig: key.providerConfig ? JSON.parse(key.providerConfig) : undefined,
+    prefix: key.prefix,
+    last4: key.last4,
+    revoked: key.revoked,
+    createdAt: key.createdAt,
+    updatedAt: key.updatedAt
+  }))
 }
 
 export const revokeApiKey = async (userId: string, apiKeyId: string) => {
