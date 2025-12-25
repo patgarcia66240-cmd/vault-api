@@ -28,8 +28,6 @@ export const createServer = async (): Promise<FastifyInstance<Server>> => {
       'http://localhost:5173',
       'http://localhost:5174',
       process.env.WEB_BASE_URL || 'http://localhost:5173',
-      // Vercel preview URLs
-      /https:\/\/vault-api-.*\.vercel\.app/,
       // Production Vercel URL
       'https://vault-api-web.vercel.app'
     ],

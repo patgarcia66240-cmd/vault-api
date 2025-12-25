@@ -1,43 +1,66 @@
-const { createServer } = require('../dist/index.js')
+const { createServer } = require('../apps/server/dist/index.js')
 
 let cachedServer = null
 
+const ALLOWED_ORIGINS = [
+  'https://vault-web.vercel.app',
+  'http://localhost:5173'
+]
+
+function getCorsOrigin(origin) {
+  if (!origin) return ALLOWED_ORIGINS[0]
+  return ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]
+}
+
 module.exports = async (req, res) => {
-  // Set CORS headers for preflight
+  const origin = getCorsOrigin(req.headers.origin)
+
+  // --- PRE-FLIGHT ---
   if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*')
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    res.setHeader('Access-Control-Allow-Origin', origin)
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
     res.setHeader('Access-Control-Allow-Credentials', 'true')
-    res.status(200).end()
+    res.status(204).end()
     return
   }
 
+  // --- SERVER INIT ---
   if (!cachedServer) {
     cachedServer = await createServer()
+    await cachedServer.ready()
   }
 
-  // Add CORS headers to all responses
-  res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*')
+  // --- CORS ---
+  res.setHeader('Access-Control-Allow-Origin', origin)
   res.setHeader('Access-Control-Allow-Credentials', 'true')
 
-  // Use Fastify's inject method for testing
+  // --- NORMALIZE URL ---
+  const url = req.url.replace(/^\/api/, '') || '/'
+
+  // --- FASTIFY INJECT ---
   const response = await cachedServer.server.inject({
     method: req.method,
-    url: req.url,
-    headers: req.headers,
-    payload: req.body
+    url,
+    headers: {
+      ...req.headers,
+      host: 'localhost'
+    },
+    payload: req.body ?? undefined
   })
 
+  // --- RESPONSE ---
   res.status(response.statusCode)
-  res.setHeader('content-type', response.headers['content-type'])
 
-  // Copy all headers
-  Object.keys(response.headers).forEach(key => {
-    if (key !== 'content-type') {
-      res.setHeader(key, response.headers[key])
+  for (const [key, value] of Object.entries(response.headers)) {
+    if (
+      key.toLowerCase() !== 'content-length' &&
+      key.toLowerCase() !== 'transfer-encoding' &&
+      key.toLowerCase() !== 'connection'
+    ) {
+      res.setHeader(key, value)
     }
-  })
+  }
 
   res.send(response.payload)
 }
