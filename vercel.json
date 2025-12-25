@@ -4,7 +4,7 @@
       "runtime": "nodejs20.x"
     }
   },
-  "buildCommand": "cd apps/web && npm run build",
+  "buildCommand": "npm run build:web",
   "outputDirectory": "apps/web/dist",
-  "installCommand": "npm install --force"
+  "installCommand": "npm install --force && cd apps/web && npm install --force"
 }
