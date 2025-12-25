@@ -1,10 +1,9 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { GlassCard } from '../components/GlassCard'
 import { Button } from '../components/Button'
 import { Input } from '../components/Input'
 import { Select } from '../components/Select'
-import { useCurrentUser, useLogout } from '../lib/services/authService'
+import { useCurrentUser } from '../lib/services/authService'
 
 const SettingsSection: React.FC<{
   title: string;
@@ -50,8 +49,6 @@ const ToggleSwitch: React.FC<{
 
 export const Settings: React.FC = () => {
   const { data: user } = useCurrentUser()
-  const logout = useLogout()
-  const navigate = useNavigate()
 
   // Form states
   const [email, setEmail] = useState(user?.email || '')
@@ -101,11 +98,6 @@ export const Settings: React.FC = () => {
       // TODO: Implement account deletion
       console.log('Delete account')
     }
-  }
-
-  const handleLogout = () => {
-    logout.mutate()
-    navigate('/login')
   }
 
   if (!user) {
@@ -197,15 +189,6 @@ export const Settings: React.FC = () => {
                 Changer le mot de passe
               </Button>
             </form>
-
-            <div className="pt-4 border-t border-white/10">
-              <Button variant="danger" onClick={handleLogout} className="w-full mb-3">
-                Se déconnecter
-              </Button>
-              <Button variant="danger" onClick={handleDeleteAccount} className="w-full">
-                Supprimer mon compte
-              </Button>
-            </div>
           </SettingsSection>
 
           {/* Notification Settings */}
@@ -251,23 +234,39 @@ export const Settings: React.FC = () => {
                 checked={autoRotate}
                 onChange={setAutoRotate}
               />
+
+             
             </div>
           </SettingsSection>
 
           {/* Danger Zone */}
           <SettingsSection title="Zone de danger">
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
                 <p className="text-red-300 text-sm mb-2">
-                  ⚠️ Attention : Les actions ci-dessous sont irréversibles
+                  Attention : Les actions ci-dessous sont irréversibles
                 </p>
                 <p className="text-white/60 text-sm">
                   Assurez-vous de sauvegarder vos données avant de continuer.
                 </p>
+                 <div className="pt-4 border-t border-white/10">
+                <Button variant="secondary" onClick={() => console.log('Reset all settings')} className="w-full">
+                  Réinitialiser tous les paramètres
+                </Button>
               </div>
-              <Button variant="danger" onClick={() => console.log('Reset all settings')}>
-                Réinitialiser tous les paramètres
-              </Button>
+              </div>
+
+              <div className="bg-red-500/10 border-2 border-red-500/50 rounded-xl p-6">
+                <p className="text-red-300 font-semibold mb-2 text-center">
+                  Action irréversible
+                </p>
+                <p className="text-white/70 text-sm mb-4 text-center">
+                  Cette action supprimera définitivement votre compte et toutes vos données.
+                </p>
+                <Button variant="danger" onClick={handleDeleteAccount} className="w-full">
+                  Supprimer mon compte
+                </Button>
+              </div>
             </div>
           </SettingsSection>
         </div>
