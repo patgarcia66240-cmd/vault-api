@@ -11,7 +11,7 @@
     "build:server": "npm run build -w server",
     "build:web": "npm run build -w web",
     "build": "npm run build:server && npm run build:web",
-    "vercel-build": "bash -c \"npm install && pushd apps/web && npm install && npm run build && popd\"",
+    "vercel-build": "npm install -w web && npm run build -w web",
     "prisma:generate": "pnpm --filter server prisma:generate",
     "prisma:migrate": "pnpm --filter server prisma:migrate",
     "prisma:studio": "pnpm --filter server prisma:studio"
