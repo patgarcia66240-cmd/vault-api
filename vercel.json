@@ -1,5 +1,7 @@
 {
-  "buildCommand": "npm run build --workspace=web",
-  "outputDirectory": "./dist",
-  "installCommand": "npm install --force"
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs20.x"
+    }
+  }
 }
