@@ -4,6 +4,6 @@
       "runtime": "nodejs20.x"
     }
   },
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build:web",
   "outputDirectory": "apps/web/dist"
 }
