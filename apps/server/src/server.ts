@@ -86,6 +86,21 @@ export const createServer = async (): Promise<FastifyInstance<Server>> => {
     return { status: 'ok', timestamp: new Date().toISOString() }
   })
 
+  // Root route
+  server.get('/', async (request, reply) => {
+    return {
+      name: 'Vault API',
+      version: '1.0.0',
+      status: 'running',
+      endpoints: {
+        health: '/health',
+        auth: '/api/auth',
+        apiKeys: '/api',
+        billing: '/api/billing'
+      }
+    }
+  })
+
   // Register routes
   server.register(authRoutes, { prefix: '/api/auth' })
   server.register(apiKeyRoutes, { prefix: '/api' })
