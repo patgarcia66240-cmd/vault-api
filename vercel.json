@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm run build",
+  "buildCommand": "corepack enable && pnpm run build",
   "outputDirectory": "apps/web/dist",
-  "installCommand": "pnpm install"
+  "installCommand": "corepack enable && corepack prepare pnpm@latest --activate && pnpm install"
 }
