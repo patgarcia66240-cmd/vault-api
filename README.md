@@ -145,7 +145,7 @@ L'application utilise un design glassmorphism moderne avec :
 
 L'application utilise une architecture séparée pour une meilleure scalabilité :
 
-- **Frontend (React)** : Déployé sur **Vercel** en site statique
+- **Frontend (React)** : Déployé sur **Vercel** ou **Netlify** en site statique
 - **Backend (FastAPI)** : Déployé sur **Render** ou **Railway** avec Docker
 
 ---
@@ -174,6 +174,43 @@ npm i -g vercel
 # Déployer
 vercel
 ```
+
+---
+
+### Frontend : Netlify
+
+Alternative à Vercel pour le déploiement du frontend React.
+
+#### Configuration
+
+Le fichier [netlify.toml](netlify.toml) configure automatiquement le build et le déploiement.
+
+#### Variables d'environnement Netlify
+
+À configurer dans le dashboard Netlify (Site settings > Environment variables) :
+```bash
+VITE_API_URL=https://votre-backend.onrender.com
+```
+
+#### Déploiement
+
+```bash
+# Installer Netlify CLI
+npm i -g netlify-cli
+
+# Déployer
+netlify deploy --prod
+```
+
+Ou via le dashboard Netlify :
+
+1. Cliquer sur **"Add new site"** → **"Import an existing project"**
+2. Connecter votre repository GitHub
+3. Configurer les paramètres de build :
+   - **Build command** : `pnpm install && pnpm --filter web build && cp -r apps/web/dist ./dist`
+   - **Publish directory** : `dist`
+4. Ajouter les variables d'environnement
+5. Déployer !
 
 ---
 
@@ -278,17 +315,32 @@ Les mêmes que Render, mais Railway peut générer automatiquement le `DATABASE_
 
 | Composant | Plateforme | Rôle |
 |-----------|-----------|------|
-| **Frontend React** | Vercel | Site statique avec CDN global |
+| **Frontend React** | Vercel ou Netlify | Site statique avec CDN global |
 | **Backend FastAPI** | Render ou Railway | API REST avec base de données |
 | **PostgreSQL** | Render/Railway | Base de données persistante |
 
 ### Avantages de cette architecture
 
 ✅ **Scalabilité indépendante** : Frontend et backend peuvent être scalés séparément
-✅ **Performance optimale** : Frontend servi par le CDN Vercel
+✅ **Performance optimale** : Frontend servi par le CDN (Vercel/Netlify)
 ✅ **Backend continu** : Pas de limitations serverless (timeout, cold starts)
-✅ **Coût réduit** : Plan gratuit généreux sur les deux plateformes
-✅ **Flexibilité** : Facile de migrer le backend vers un autre provider
+✅ **Coût réduit** : Plan gratuit généreux sur toutes les plateformes
+✅ **Flexibilité** : Choix de la plateforme frontend (Vercel vs Netlify)
+✅ **Facile à migrer** : Frontend et backend sont découplés
+
+### Comparaison Vercel vs Netlify
+
+| Fonctionnalité | Vercel | Netlify |
+|----------------|--------|---------|
+| **CDN global** | ✅ | ✅ |
+| **Plan gratuit** | 100GB/mois | 100GB/mois |
+| **Preview URLs** | ✅ | ✅ |
+| **Deploy previews** | ✅ | ✅ |
+| **Forms handling** | ❌ | ✅ |
+| **Serverless functions** | ✅ | ✅ |
+| **Edge functions** | ✅ | ✅ |
+| **Build time** | Plus rapide | Rapide |
+| **Interface** | Minimaliste | Plus d'options |
 
 ## 📝 License
 
