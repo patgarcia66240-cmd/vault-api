@@ -17,8 +17,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copier le code de l'application
 COPY apps/server-python/app ./app
-COPY apps/server-python/alembic.ini ./
-COPY apps/server-python/alembic ./alembic
 
 # Créer un répertoire pour les logs
 RUN mkdir -p /app/logs
