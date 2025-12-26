@@ -5,16 +5,13 @@
     "apps/*"
   ],
   "scripts": {
-    "dev:server": "pnpm --filter server dev",
+    "dev:server": "cd apps/server-python && start.bat",
+    "dev:server:unix": "cd apps/server-python && bash start.sh",
     "dev:web": "pnpm --filter web dev",
-    "dev": "concurrently \"pnpm dev:server\" \"pnpm dev:web\"",
-    "build:server": "npm run build -w server",
+    "dev": "concurrently \"pnpm dev:server:unix\" \"pnpm dev:web\"",
     "build:web": "npm run build -w web",
-    "build": "npm run build:server && npm run build:web",
-    "vercel-build": "npm install -w web && npm run build -w web",
-    "prisma:generate": "pnpm --filter server prisma:generate",
-    "prisma:migrate": "pnpm --filter server prisma:migrate",
-    "prisma:studio": "pnpm --filter server prisma:studio"
+    "build": "npm run build:web",
+    "vercel-build": "npm install -w web && npm run build -w web"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",

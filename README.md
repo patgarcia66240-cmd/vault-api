@@ -21,41 +21,47 @@ Plateforme complète de gestion de clés API construite avec les technologies we
 - **Tailwind CSS** avec design glassmorphism
 - **Axios** pour les appels API
 
-### Backend (apps/server)
-- **Fastify** (Node.js) + **TypeScript**
-- **Prisma** ORM avec **SQLite**
+### Backend (apps/server-python)
+- **FastAPI** (Python 3.9+) + **Pydantic**
+- **SQLAlchemy** ORM avec **PostgreSQL** (Neon)
 - **JWT** pour l'authentification
 - **AES-256-GCM** pour le chiffrement
 - **Stripe** pour les paiements
-- **Zod** pour la validation
-- **Pino** pour les logs
+- **Pydantic** pour la validation
+- **Mangum** pour Vercel serverless
 
 ## 📁 Structure du Projet
 
 ```
 vault-api/
 ├─ apps/
-│  ├─ server/           # Backend Fastify
-│  │  ├─ src/
-│  │  │  ├─ libs/       # JWT, crypto, utils
-│  │  │  ├─ services/   # Logique métier
-│  │  │  ├─ routes/     # Endpoints API
-│  │  │  └─ schemas/    # Validation Zod
-│  │  └─ prisma/        # Schéma de base de données
+│  ├─ server-python/    # Backend FastAPI
+│  │  ├─ app/
+│  │  │  ├─ core/       # Config, database, security
+│  │  │  ├─ models/     # SQLAlchemy models
+│  │  │  ├─ routes/     # API endpoints
+│  │  │  ├─ schemas/    # Pydantic schemas
+│  │  │  └─ main.py     # FastAPI app entry
+│  │  ├─ requirements.txt
+│  │  ├─ start.sh / start.bat
+│  │  └─ .env
 │  └─ web/              # Frontend React
 │     ├─ src/
 │     │  ├─ components/ # Composants UI
 │     │  ├─ pages/      # Pages React
 │     │  └─ lib/        # Services & API client
-├─ debug-server.js      # Script de débogage
-├─ package.json         # Configuration workspace
-└─ README.md
+├─ api/                 # Vercel serverless handlers
+│  └─ index.py          # FastAPI handler for Vercel
+├─ vercel.json          # Vercel configuration
+├─ requirements.txt     # Python dependencies
+└─ package.json         # Configuration workspace
 ```
 
 ## 🚀 Démarrage Rapide
 
 ### Prérequis
 - Node.js 18+
+- Python 3.9+
 - pnpm 8+
 
 ### Installation
@@ -69,10 +75,10 @@ pnpm install
 
 2. **Configurer les variables d'environnement**
 
-Backend (apps/server/.env):
+Backend (apps/server-python/.env):
 ```bash
-cp apps/server/.env.example apps/server/.env
-# Éditer apps/server/.env avec vos valeurs
+cp apps/server-python/.env.example apps/server-python/.env
+# Éditer apps/server-python/.env avec vos valeurs
 ```
 
 Frontend (apps/web/.env):
@@ -80,58 +86,53 @@ Frontend (apps/web/.env):
 cp apps/web/.env.example apps/web/.env
 ```
 
-3. **Initialiser la base de données**
+3. **Démarrer les serveurs de développement**
 ```bash
-pnpm prisma:generate
-pnpm prisma:migrate
-```
+# Windows - Démarrer backend FastAPI
+cd apps/server-python
+start.bat
 
-4. **Démarrer les serveurs de développement**
-```bash
-# Démarrer frontend et backend
-pnpm dev
+# Linux/Mac - Démarrer backend FastAPI
+cd apps/server-python
+bash start.sh
 
-# Ou individuellement
-pnpm dev:server  # Backend sur :8080
+# Démarrer frontend React
 pnpm dev:web     # Frontend sur :5173
 ```
 
 ## 🔐 Variables d'Environnement
 
-### Backend (.env)
+### Backend (apps/server-python/.env)
 ```bash
-NODE_ENV=development
-PORT=8080
-DATABASE_URL="file:./dev.db"
+ENVIRONMENT=development
+PORT=8000
+DATABASE_URL="postgresql+pg8000://user:pass@host/db?sslmode=require"
 JWT_SECRET="your_super_secret_jwt_key_at_least_32_characters"
 CRYPTO_MASTER_KEY="base64_encoded_32_byte_key"
 STRIPE_SECRET_KEY="sk_test_your_stripe_key"
 STRIPE_WEBHOOK_SECRET="whsec_your_webhook_secret"
 STRIPE_PRICE_PRO="price_your_pro_plan"
 WEB_BASE_URL="http://localhost:5173"
+ALLOWED_ORIGINS="http://localhost:5173,http://localhost:5174,https://vault-api-web.vercel.app"
 ```
 
-### Frontend (.env)
+### Frontend (apps/web/.env)
 ```bash
-VITE_API_URL=http://localhost:8080
+VITE_API_URL=http://localhost:8000
 ```
 
 ## 📊 Endpoints API
 
 ### Authentification
-- `POST /api/auth/signup` - Créer un compte
+- `POST /api/auth/register` - Créer un compte
 - `POST /api/auth/login` - Connexion
-- `POST /api/auth/logout` - Déconnexion
 - `GET /api/auth/me` - Utilisateur actuel
 
 ### Clés API
-- `GET /api/keys` - Lister les clés API
-- `POST /api/keys` - Créer une nouvelle clé API
-- `DELETE /api/keys/:id` - Révoquer une clé API
-
-### Facturation
-- `POST /api/billing/checkout` - Créer une session Stripe
-- `POST /api/billing/webhook` - Gérer les webhooks Stripe
+- `GET /api/apikeys` - Lister les clés API
+- `POST /api/apikeys` - Créer une nouvelle clé API
+- `GET /api/apikeys/:id` - Voir une clé API
+- `DELETE /api/apikeys/:id` - Révoquer une clé API
 
 ## 🎨 Système de Design
 
@@ -141,32 +142,148 @@ L'application utilise un design glassmorphism moderne avec :
 - **Composants** : Cartes et boutons glassmorphism
 - **Animations** : Transitions fluides
 
-## 🛠️ Développement
+## 🚢 Déploiement
 
-### Scripts Disponibles
+### Option 1 : Vercel (Serverless)
+
+Le projet est configuré pour être déployé sur Vercel avec une architecture serverless :
+
+1. **Frontend** : React build statique servi par Vercel
+2. **Backend** : FastAPI déployé comme fonction serverless avec Mangum
+
+#### Configuration automatique
+
+Le fichier `vercel.json` configure :
+- Le runtime Python 3.9 pour les fonctions API
+- Le redirige des routes `/api/*` vers le handler FastAPI
+- La durée maximale des fonctions (10 secondes)
+
+#### Variables d'environnement Vercel
+
+À configurer dans le dashboard Vercel :
+- `DATABASE_URL` : URL de connexion PostgreSQL Neon
+- `JWT_SECRET` : Clé secrète JWT
+- `CRYPTO_MASTER_KEY` : Clé maître de chiffrement (32 bytes base64)
+- `STRIPE_SECRET_KEY` : Clé secrète Stripe
+- `STRIPE_WEBHOOK_SECRET` : Secret webhook Stripe
+- `ALLOWED_ORIGINS` : Origines CORS autorisées
+
+#### Déploiement
 
 ```bash
-# Développement
-pnpm dev              # Démarrer les deux serveurs
-pnpm dev:server       # Backend uniquement
-pnpm dev:web          # Frontend uniquement
+# Installer Vercel CLI
+npm i -g vercel
 
-# Base de données
-pnpm prisma:generate  # Générer client Prisma
-pnpm prisma:migrate   # Lancer les migrations
-pnpm prisma:studio    # Ouvrir Prisma Studio
-
-# Build
-pnpm build            # Build des deux apps
-pnpm build:server     # Backend uniquement
-pnpm build:web        # Frontend uniquement
+# Déployer
+vercel
 ```
 
-### Débogage
+---
 
-Pour déboguer le backend :
-- **Script** : `node debug-server.js`
-- **VS Code** : Utiliser la configuration "Déboguer le Backend Server"
+### Option 2 : Render (Service Web & Docker)
+
+Déployez le serveur FastAPI comme un service web avec Docker.
+
+#### Fichiers de configuration
+
+- `Dockerfile` : Configuration Docker pour le service
+- `render.yaml` : Configuration automatique du service et de la base de données
+
+#### Déploiement avec Render
+
+```bash
+# Installer Render CLI
+npm i -g render
+
+# Connecter à Render
+render login
+
+# Déployer avec le blueprint
+render blueprint launch
+```
+
+Ou manuellement via le dashboard :
+
+1. Créer un **Web Service** sur Render
+2. Connecter votre repository
+3. Configurer :
+   - **Runtime** : Docker
+   - **Docker Context** : `/`
+   - **Dockerfile Path** : `./Dockerfile`
+4. Ajouter les variables d'environnement (voir ci-dessous)
+5. Créer une **PostgreSQL Database**
+6. Mettre à jour `DATABASE_URL` avec les credentials de la base
+
+#### Variables d'environnement Render
+
+```bash
+ENVIRONMENT=production
+PORT=8000
+DATABASE_URL=postgresql://user:pass@host:5432/dbname
+JWT_SECRET=votre_clé_secrète_32_caractères_min
+CRYPTO_MASTER_KEY=clé_base64_32_bytes
+STRIPE_SECRET_KEY=sk_live_votre_clé
+STRIPE_WEBHOOK_SECRET=whsec_votre_secret
+STRIPE_PRICE_PRO=price_votre_plan
+WEB_BASE_URL=https://votre-app.onrender.com
+ALLOWED_ORIGINS=https://votre-app.onrender.com,https://votre-frontend.com
+```
+
+---
+
+### Option 3 : Railway (Service & Docker)
+
+Déployez facilement avec Railway en utilisant Docker ou le déploiement automatique.
+
+#### Fichiers de configuration
+
+- `Dockerfile` : Configuration Docker partagée avec Render
+- `railway.json` : Configuration spécifique Railway
+
+#### Déploiement avec Railway
+
+```bash
+# Installer Railway CLI
+npm i -g railway
+
+# Connecter à Railway
+railway login
+
+# Initialiser le projet
+railway init
+
+# Ajouter les variables d'environnement
+railway variables set JWT_SECRET="votre_clé"
+railway variables set CRYPTO_MASTER_KEY="votre_clé_crypto"
+railway variables set STRIPE_SECRET_KEY="sk_live_votre_clé"
+# ... autres variables
+
+# Déployer
+railway up
+```
+
+Ou via le dashboard Railway :
+
+1. Cliquer sur **Deploy from GitHub repo**
+2. Sélectionner votre repository
+3. Railway détectera automatiquement le Dockerfile
+4. Configurer les variables d'environnement dans l'onglet **Variables**
+5. Ajouter un service **PostgreSQL** depuis le Marketplace
+6. Le `DATABASE_URL` sera automatiquement injecté
+
+#### Variables d'environnement Railway
+
+Les mêmes que Render, mais Railway peut générer automatiquement le `DATABASE_URL` si vous ajoutez un service PostgreSQL.
+
+---
+
+## 💡 Choix de la plateforme
+
+| Plateforme | Avantages | Utilisation recommandée |
+|------------|-----------|------------------------|
+| **Vercel** | Serverless, CDN global, preview URLs | Frontend + API légère |
+| **Render** | Service continu, base de données intégrée, généreux plan gratuit | Backend API complet |
+| **Railway** | Interface simple, build automatique, services multiples | Déploiement rapide full-stack |
 
 ## 📝 License
 
