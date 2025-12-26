@@ -23,19 +23,18 @@ Plateforme complète de gestion de clés API construite avec les technologies we
 
 ### Backend (apps/server-python)
 - **FastAPI** (Python 3.9+) + **Pydantic**
-- **SQLAlchemy** ORM avec **PostgreSQL** (Neon)
+- **SQLAlchemy** ORM avec **PostgreSQL**
 - **JWT** pour l'authentification
 - **AES-256-GCM** pour le chiffrement
 - **Stripe** pour les paiements
 - **Pydantic** pour la validation
-- **Mangum** pour Vercel serverless
 
 ## 📁 Structure du Projet
 
 ```
 vault-api/
 ├─ apps/
-│  ├─ server-python/    # Backend FastAPI
+│  ├─ server-python/    # Backend FastAPI (Render/Railway)
 │  │  ├─ app/
 │  │  │  ├─ core/       # Config, database, security
 │  │  │  ├─ models/     # SQLAlchemy models
@@ -45,15 +44,15 @@ vault-api/
 │  │  ├─ requirements.txt
 │  │  ├─ start.sh / start.bat
 │  │  └─ .env
-│  └─ web/              # Frontend React
+│  └─ web/              # Frontend React (Vercel)
 │     ├─ src/
 │     │  ├─ components/ # Composants UI
 │     │  ├─ pages/      # Pages React
 │     │  └─ lib/        # Services & API client
-├─ api/                 # Vercel serverless handlers
-│  └─ index.py          # FastAPI handler for Vercel
-├─ vercel.json          # Vercel configuration
-├─ requirements.txt     # Python dependencies
+├─ Dockerfile           # Configuration pour Render/Railway
+├─ render.yaml          # Blueprint Render
+├─ railway.json         # Configuration Railway
+├─ vercel.json          # Configuration Vercel (frontend)
 └─ package.json         # Configuration workspace
 ```
 
@@ -144,29 +143,27 @@ L'application utilise un design glassmorphism moderne avec :
 
 ## 🚢 Déploiement
 
-### Option 1 : Vercel (Serverless)
+L'application utilise une architecture séparée pour une meilleure scalabilité :
 
-Le projet est configuré pour être déployé sur Vercel avec une architecture serverless :
+- **Frontend (React)** : Déployé sur **Vercel** en site statique
+- **Backend (FastAPI)** : Déployé sur **Render** ou **Railway** avec Docker
 
-1. **Frontend** : React build statique servi par Vercel
-2. **Backend** : FastAPI déployé comme fonction serverless avec Mangum
+---
 
-#### Configuration automatique
+### Frontend : Vercel
 
-Le fichier `vercel.json` configure :
-- Le runtime Python 3.9 pour les fonctions API
-- Le redirige des routes `/api/*` vers le handler FastAPI
-- La durée maximale des fonctions (10 secondes)
+Déployez le frontend React sur Vercel en tant que site statique.
+
+#### Configuration
+
+Le fichier [vercel.json](vercel.json) configure automatiquement le build et le déploiement.
 
 #### Variables d'environnement Vercel
 
 À configurer dans le dashboard Vercel :
-- `DATABASE_URL` : URL de connexion PostgreSQL Neon
-- `JWT_SECRET` : Clé secrète JWT
-- `CRYPTO_MASTER_KEY` : Clé maître de chiffrement (32 bytes base64)
-- `STRIPE_SECRET_KEY` : Clé secrète Stripe
-- `STRIPE_WEBHOOK_SECRET` : Secret webhook Stripe
-- `ALLOWED_ORIGINS` : Origines CORS autorisées
+```bash
+VITE_API_URL=https://votre-backend.onrender.com
+```
 
 #### Déploiement
 
@@ -180,7 +177,7 @@ vercel
 
 ---
 
-### Option 2 : Render (Service Web & Docker)
+### Backend : Render (Service Web & Docker)
 
 Déployez le serveur FastAPI comme un service web avec Docker.
 
@@ -225,13 +222,13 @@ CRYPTO_MASTER_KEY=clé_base64_32_bytes
 STRIPE_SECRET_KEY=sk_live_votre_clé
 STRIPE_WEBHOOK_SECRET=whsec_votre_secret
 STRIPE_PRICE_PRO=price_votre_plan
-WEB_BASE_URL=https://votre-app.onrender.com
-ALLOWED_ORIGINS=https://votre-app.onrender.com,https://votre-frontend.com
+WEB_BASE_URL=https://votre-frontend.vercel.app
+ALLOWED_ORIGINS=https://votre-frontend.vercel.app
 ```
 
 ---
 
-### Option 3 : Railway (Service & Docker)
+### Backend : Railway (Service & Docker)
 
 Déployez facilement avec Railway en utilisant Docker ou le déploiement automatique.
 
@@ -277,13 +274,21 @@ Les mêmes que Render, mais Railway peut générer automatiquement le `DATABASE_
 
 ---
 
-## 💡 Choix de la plateforme
+## 📋 Résumé de l'architecture
 
-| Plateforme | Avantages | Utilisation recommandée |
-|------------|-----------|------------------------|
-| **Vercel** | Serverless, CDN global, preview URLs | Frontend + API légère |
-| **Render** | Service continu, base de données intégrée, généreux plan gratuit | Backend API complet |
-| **Railway** | Interface simple, build automatique, services multiples | Déploiement rapide full-stack |
+| Composant | Plateforme | Rôle |
+|-----------|-----------|------|
+| **Frontend React** | Vercel | Site statique avec CDN global |
+| **Backend FastAPI** | Render ou Railway | API REST avec base de données |
+| **PostgreSQL** | Render/Railway | Base de données persistante |
+
+### Avantages de cette architecture
+
+✅ **Scalabilité indépendante** : Frontend et backend peuvent être scalés séparément
+✅ **Performance optimale** : Frontend servi par le CDN Vercel
+✅ **Backend continu** : Pas de limitations serverless (timeout, cold starts)
+✅ **Coût réduit** : Plan gratuit généreux sur les deux plateformes
+✅ **Flexibilité** : Facile de migrer le backend vers un autre provider
 
 ## 📝 License
 
