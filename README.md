@@ -145,127 +145,104 @@ L'application utilise un design glassmorphism moderne avec :
 
 L'application utilise une architecture séparée pour une meilleure scalabilité :
 
-- **Frontend (React)** : Déployé sur **Vercel** ou **Netlify** en site statique
-- **Backend (FastAPI)** : Déployé sur **Render** ou **Railway** avec Docker
+- **Frontend (React)** : Déployé sur **Netlify** ✅ *déjà déployé*
+- **Backend (FastAPI)** : Déployé sur **Render** ✅ *déjà déployé*
+
+### Application complète déployée 🎉
+
+✅ **Frontend React** : https://vault-api-web.netlify.app
+✅ **Backend FastAPI** : https://vault-api-dmzg.onrender.com
+
+L'application est complète et opérationnelle avec :
+- Frontend React hébergé sur Netlify avec CDN global
+- Backend FastAPI avec base de données PostgreSQL
+- Chiffrement AES-256-GCM pour les clés API
+- Authentification JWT sécurisée
+- Intégration Stripe pour les paiements
 
 ---
 
-### Frontend : Vercel
+### Frontend : Netlify (Déjà déployé)
 
-Déployez le frontend React sur Vercel en tant que site statique.
+✅ **Le frontend est déjà déployé** sur : https://vault-api-web.netlify.app
 
-#### Configuration
+#### Fichiers de configuration utilisés
 
-Le fichier [vercel.json](vercel.json) configure automatiquement le build et le déploiement.
+- [netlify.toml](netlify.toml) : Configuration automatique du build et déploiement
 
-#### Variables d'environnement Vercel
+#### Configuration actuelle
 
-À configurer dans le dashboard Vercel :
+Le frontend utilise :
+- **Build automatique** avec pnpm
+- **Deploy previews** pour chaque PR/branche
+- **CDN global** Netlify
+- **Redirects** pour le routing React Router (SPA)
+
+#### Pour mettre à jour le frontend
+
 ```bash
-VITE_API_URL=https://votre-backend.onrender.com
+# Simple push sur main déclenche le déploiement automatique
+git push origin main
 ```
 
-#### Déploiement
+#### Variables d'environnement configurées
 
-```bash
-# Installer Vercel CLI
-npm i -g vercel
-
-# Déployer
-vercel
-```
+- `VITE_API_URL` : https://vault-api-dmzg.onrender.com
 
 ---
 
-### Frontend : Netlify
+### Configuration locale du frontend
 
-Alternative à Vercel pour le déploiement du frontend React.
-
-#### Configuration
-
-Le fichier [netlify.toml](netlify.toml) configure automatiquement le build et le déploiement.
-
-#### Variables d'environnement Netlify
-
-À configurer dans le dashboard Netlify (Site settings > Environment variables) :
-```bash
-VITE_API_URL=https://votre-backend.onrender.com
-```
-
-#### Déploiement
+Pour le développement local, configurez le fichier [apps/web/.env](apps/web/.env) :
 
 ```bash
-# Installer Netlify CLI
-npm i -g netlify-cli
+# Pour le développement local (backend local)
+VITE_API_URL=http://localhost:8000
 
-# Déployer
-netlify deploy --prod
-```
-
-Ou via le dashboard Netlify :
-
-1. Cliquer sur **"Add new site"** → **"Import an existing project"**
-2. Connecter votre repository GitHub
-3. Configurer les paramètres de build :
-   - **Build command** : `pnpm install && pnpm --filter web build && cp -r apps/web/dist ./dist`
-   - **Publish directory** : `dist`
-4. Ajouter les variables d'environnement
-5. Déployer !
-
----
-
-### Backend : Render (Service Web & Docker)
-
-Déployez le serveur FastAPI comme un service web avec Docker.
-
-#### Fichiers de configuration
-
-- `Dockerfile` : Configuration Docker pour le service
-- `render.yaml` : Configuration automatique du service et de la base de données
-
-#### Déploiement avec Render
-
-```bash
-# Installer Render CLI
-npm i -g render
-
-# Connecter à Render
-render login
-
-# Déployer avec le blueprint
-render blueprint launch
-```
-
-Ou manuellement via le dashboard :
-
-1. Créer un **Web Service** sur Render
-2. Connecter votre repository
-3. Configurer :
-   - **Runtime** : Docker
-   - **Docker Context** : `/`
-   - **Dockerfile Path** : `./Dockerfile`
-4. Ajouter les variables d'environnement (voir ci-dessous)
-5. Créer une **PostgreSQL Database**
-6. Mettre à jour `DATABASE_URL` avec les credentials de la base
-
-#### Variables d'environnement Render
-
-```bash
-ENVIRONMENT=production
-PORT=8000
-DATABASE_URL=postgresql://user:pass@host:5432/dbname
-JWT_SECRET=votre_clé_secrète_32_caractères_min
-CRYPTO_MASTER_KEY=clé_base64_32_bytes
-STRIPE_SECRET_KEY=sk_live_votre_clé
-STRIPE_WEBHOOK_SECRET=whsec_votre_secret
-STRIPE_PRICE_PRO=price_votre_plan
-WEB_BASE_URL=https://votre-frontend.vercel.app
-ALLOWED_ORIGINS=https://votre-frontend.vercel.app
+# OU pour utiliser le backend déployé sur Render
+VITE_API_URL=https://vault-api-dmzg.onrender.com
 ```
 
 ---
 
-### Backend : Railway (Service & Docker)
+### Backend : Render (Déjà déployé)
+
+✅ **Le backend est déjà déployé** sur : https://vault-api-dmzg.onrender.com
+
+#### Fichiers de configuration utilisés
+
+- [Dockerfile](Dockerfile) : Configuration Docker pour le service
+- [render.yaml](render.yaml) : Blueprint pour le déploiement automatique
+
+#### Configuration actuelle
+
+Le backend utilise :
+- **Runtime** : Docker avec Python 3.11
+- **Base de données** : PostgreSQL (hébergée sur Render)
+- **Port** : 8000
+
+#### Pour mettre à jour le backend
+
+```bash
+# Simple push sur main déclenche le déploiement automatique
+git push origin main
+```
+
+#### Variables d'environnement configurées
+
+Les variables suivantes sont déjà configurées sur Render :
+- `DATABASE_URL` : Connection string PostgreSQL
+- `JWT_SECRET` : Clé secrète pour l'authentification
+- `CRYPTO_MASTER_KEY` : Clé de chiffrement
+- `STRIPE_SECRET_KEY` : Clé API Stripe
+- `WEB_BASE_URL` : https://vault-api-web.netlify.app ✅
+- `ALLOWED_ORIGINS` : https://vault-api-web.netlify.app ✅
+
+---
+
+### Backend : Railway (Alternative)
+
+Non utilisé actuellement. Le [Dockerfile](Dockerfile) et [railway.json](railway.json) sont disponibles si vous souhaitez migrer.
 
 Déployez facilement avec Railway en utilisant Docker ou le déploiement automatique.
 
@@ -313,34 +290,44 @@ Les mêmes que Render, mais Railway peut générer automatiquement le `DATABASE_
 
 ## 📋 Résumé de l'architecture
 
-| Composant | Plateforme | Rôle |
-|-----------|-----------|------|
-| **Frontend React** | Vercel ou Netlify | Site statique avec CDN global |
-| **Backend FastAPI** | Render ou Railway | API REST avec base de données |
-| **PostgreSQL** | Render/Railway | Base de données persistante |
+| Composant | Plateforme | URL | Statut |
+|-----------|-----------|-----|--------|
+| **Frontend React** | Netlify | https://vault-api-web.netlify.app | ✅ Déployé |
+| **Backend FastAPI** | Render | https://vault-api-dmzg.onrender.com | ✅ Déployé |
+| **PostgreSQL** | Render | - | ✅ Configuré |
+
+### Architecture actuelle
+
+```
+┌─────────────────┐         ┌──────────────────┐         ┌─────────────┐
+│   Frontend      │  HTTP   │     Backend      │  SQL   │  Database   │
+│   (React)       │ ──────→ │   (FastAPI)      │ ─────→ │ PostgreSQL  │
+│    Netlify      │         │     Render       │         │   Render    │
+└─────────────────┘         └──────────────────┘         └─────────────┘
+      ✅ Actif                    ✅ Actif                    ✅ Actif
+```
 
 ### Avantages de cette architecture
 
-✅ **Scalabilité indépendante** : Frontend et backend peuvent être scalés séparément
-✅ **Performance optimale** : Frontend servi par le CDN (Vercel/Netlify)
+✅ **Application complète** : Frontend et backend opérationnels
+✅ **Scalabilité indépendante** : Frontend et backend séparés
+✅ **Performance optimale** : Frontend servi par le CDN Netlify
 ✅ **Backend continu** : Pas de limitations serverless (timeout, cold starts)
-✅ **Coût réduit** : Plan gratuit généreux sur toutes les plateformes
-✅ **Flexibilité** : Choix de la plateforme frontend (Vercel vs Netlify)
-✅ **Facile à migrer** : Frontend et backend sont découplés
+✅ **Coût réduit** : Plans gratuits généreux
+✅ **CI/CD automatique** : Déploiement automatique à chaque push
+✅ **Facile à maintenir** : Architecture claire et découplée
 
-### Comparaison Vercel vs Netlify
+### Mises à jour
 
-| Fonctionnalité | Vercel | Netlify |
-|----------------|--------|---------|
-| **CDN global** | ✅ | ✅ |
-| **Plan gratuit** | 100GB/mois | 100GB/mois |
-| **Preview URLs** | ✅ | ✅ |
-| **Deploy previews** | ✅ | ✅ |
-| **Forms handling** | ❌ | ✅ |
-| **Serverless functions** | ✅ | ✅ |
-| **Edge functions** | ✅ | ✅ |
-| **Build time** | Plus rapide | Rapide |
-| **Interface** | Minimaliste | Plus d'options |
+Pour mettre à jour l'application :
+
+```bash
+# Simple push sur main déclenche les déploiements automatiques
+git push origin main
+```
+
+- Frontend Netlify : Déploiement automatique ✅
+- Backend Render : Déploiement automatique ✅
 
 ## 📝 License
 
