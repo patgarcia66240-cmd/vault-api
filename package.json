@@ -9,6 +9,11 @@
     "dev:server:unix": "cd apps/server-python && bash start.sh",
     "dev:web": "pnpm --filter web dev",
     "dev": "concurrently \"pnpm dev:server:unix\" \"pnpm dev:web\"",
+    "dev:all": "concurrently \"pnpm dev:server:unix\" \"pnpm dev:web\"",
+    "dev:all:windows": "start.bat",
+    "start": "pnpm dev",
+    "start:windows": "start-all.bat",
+    "start:unix": "bash start-all.sh",
     "build:web": "npm run build -w web",
     "build": "npm run build:web",
     "vercel-build": "npm install -w web && npm run build -w web"

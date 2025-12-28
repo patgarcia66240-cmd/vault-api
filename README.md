@@ -86,18 +86,32 @@ cp apps/web/.env.example apps/web/.env
 ```
 
 3. **Démarrer les serveurs de développement**
+
+**Option 1 : Script rapide (Recommandé)**
 ```bash
-# Windows - Démarrer backend FastAPI
-cd apps/server-python
-start.bat
+# Windows
+start-all.bat
 
-# Linux/Mac - Démarrer backend FastAPI
-cd apps/server-python
-bash start.sh
-
-# Démarrer frontend React
-pnpm dev:web     # Frontend sur :5173
+# Linux/Mac
+bash start-all.sh
 ```
+
+**Option 2 : Commande pnpm**
+```bash
+pnpm start
+```
+
+**Option 3 : Démarrage séparé**
+```bash
+# Backend uniquement
+pnpm dev:server      # Windows
+pnpm dev:server:unix # Linux/Mac
+
+# Frontend uniquement
+pnpm dev:web         # Frontend sur :5173
+```
+
+> 📖 **Voir [START.md](START.md)** pour plus de détails sur les scripts de démarrage
 
 ## 🔐 Variables d'Environnement
 
