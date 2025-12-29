@@ -19,14 +19,30 @@ def generate_api_key() -> str:
 
 
 def get_api_key_parts(api_key: str) -> tuple[str, str]:
-    """Get prefix and last4 from API key"""
-    parts = api_key.split("_")
-    if len(parts) > 1:
-        prefix = parts[0] + "_"
+    """Get prefix and last4 from API key
+
+    Pour les clés avec underscore:
+    - sk_abc123def456 -> prefix: sk_, last4: d456
+    - sk-proj_abc123def -> prefix: sk-proj_, last4: def...
+
+    Pour les clés personnalisées (ex: Google, OpenAI):
+    - On limite le prefix à 10 caractères max pour la contrainte DB
+    """
+    # Trouver le premier underscore pour séparer le préfixe
+    first_underscore = api_key.find("_")
+
+    if first_underscore > 0 and first_underscore < len(api_key) - 5:
+        # Prendre tout jusqu'au premier underscore (inclus) comme prefix
+        # Mais limiter à 10 caractères max pour la contrainte DB
+        prefix = api_key[:first_underscore + 1]
+        prefix = prefix[:10]  # Limiter à 10 caractères
         last4 = api_key[-4:]
     else:
-        prefix = api_key[:4]
-        last4 = api_key[-4:]
+        # Pas d'underscore ou clé trop courte, prendre les 8 premiers caractères
+        # (pour laisser de la place aux *** dans l'affichage)
+        prefix = api_key[:8]
+        last4 = api_key[-4:] if len(api_key) >= 4 else api_key
+
     return prefix, last4
 
 
