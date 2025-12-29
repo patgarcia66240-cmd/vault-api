@@ -5,7 +5,7 @@ import { Input } from '../components/Input'
 import { Select } from '../components/Select'
 import { useApiKeys, useCreateApiKey, useRevokeApiKey, useGetDecryptedApiKey, useUpdateApiKey } from '../lib/services/apiKeyService'
 import { ApiKey, Provider, SupabaseConfig } from '../lib/api'
-import { TrashIcon, ClipboardDocumentIcon, CheckIcon, CloudIcon, ExclamationTriangleIcon, LockClosedIcon, PencilIcon } from '@heroicons/react/24/outline'
+import { TrashIcon, ClipboardDocumentIcon, CheckIcon, CloudIcon, ExclamationTriangleIcon, LockClosedIcon, PencilIcon, CpuChipIcon } from '@heroicons/react/24/outline'
 
 const SupabaseCard: React.FC<{
   apiKey: ApiKey;
@@ -137,6 +137,9 @@ const ApiKeyCard: React.FC<{
   const [copied, setCopied] = useState(false)
   const decryptMutation = useGetDecryptedApiKey()
 
+  // Check if provider is IA
+  const isAIProvider = apiKey.provider === 'IA'
+
   const handleCopy = async () => {
     try {
       const result = await decryptMutation.mutateAsync(apiKey.id)
@@ -155,12 +158,26 @@ const ApiKeyCard: React.FC<{
   return (
     <GlassCard hover className="p-6">
       <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 bg-base-yellow/20 rounded-lg">
-          <LockClosedIcon className="w-6 h-6 text-base-yellow" />
+        <div className={`p-2 rounded-lg ${isAIProvider ? 'bg-purple-500/20' : 'bg-base-yellow/20'}`}>
+          {isAIProvider ? (
+            <CpuChipIcon className="w-6 h-6 text-purple-400" />
+          ) : (
+            <LockClosedIcon className="w-6 h-6 text-base-yellow" />
+          )}
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-semibold text-white">{apiKey.name}</h3>
+            {isAIProvider && (
+              <span className="px-2 py-1 bg-purple-500/20 text-purple-400 text-xs rounded-full font-medium">
+                IA
+              </span>
+            )}
+            {apiKey.provider === 'SUPABASE' && (
+              <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full font-medium">
+                SUPABASE
+              </span>
+            )}
             {apiKey.revoked && (
               <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-full">
                 Révoquée
@@ -278,11 +295,12 @@ const AddApiKeyModal: React.FC<{
         }
       })
     } else {
+      // CUSTOM + tous les providers IA (MISTRAL, DEEPSEEK, etc.)
       if (!value.trim()) return
       onSave({
         name: name.trim(),
         value: value.trim(),
-        provider: 'CUSTOM'
+        provider: provider
       })
     }
   }
@@ -323,12 +341,13 @@ const AddApiKeyModal: React.FC<{
                 onChange={(value) => setProvider(value as Provider)}
                 options={[
                   { value: 'CUSTOM', label: 'Clé personnalisée' },
-                  { value: 'SUPABASE', label: 'Supabase' }
+                  { value: 'SUPABASE', label: 'Supabase' },
+                  { value: 'IA', label: 'IA (OpenAI, Mistral, Gemini, etc.)' }
                 ]}
               />
             </div>
 
-            {provider === 'CUSTOM' && (
+            {provider !== 'SUPABASE' && (
               <div>
                 <label className="block text-white/80 text-sm mb-2">Valeur de la clé API</label>
                 <Input

@@ -53,8 +53,16 @@ def create_api_key(
     db: Session = Depends(get_db)
 ):
     """Create a new API key"""
-    # Generate API key
-    api_key_plain = generate_api_key()
+    # Determine if we should use user's key or generate a new one
+    # For SUPABASE, we generate our own key
+    # For CUSTOM and AI providers (MISTRAL, DEEPSEEK, etc.), user provides the key
+    if api_key_data.provider == "SUPABASE" or not api_key_data.value:
+        # Generate API key
+        api_key_plain = generate_api_key()
+    else:
+        # Use user-provided API key
+        api_key_plain = api_key_data.value
+
     prefix, last4 = get_api_key_parts(api_key_plain)
 
     # Encrypt API key
@@ -133,7 +141,7 @@ def update_api_key(
     current_user: UserProfile = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Update an API key (name or provider config)"""
+    """Update an API key (name, provider, or provider config)"""
     api_key = db.query(ApiKey).filter(
         ApiKey.id == api_key_id,
         ApiKey.user_id == current_user.id
@@ -149,8 +157,30 @@ def update_api_key(
     if api_key_data.name:
         api_key.name = api_key_data.name
 
-    # Handle provider config update
-    provider_config = None
+    # Update provider if changed
+    if api_key_data.provider and api_key_data.provider != api_key.provider:
+        api_key.provider = api_key_data.provider
+
+    # If value is provided (for CUSTOM or IA), update the encrypted key
+    if api_key_data.value and api_key_data.provider in ["CUSTOM", "IA"]:
+        # Generate new prefix and last4 from the provided key
+        prefix, last4 = get_api_key_parts(api_key_data.value)
+
+        # Encrypt the new key
+        enc_ciphertext, enc_nonce = crypto_manager.encrypt(api_key_data.value)
+
+        # Create new hash
+        api_key_hash = hashlib.sha256(api_key_data.value.encode()).hexdigest()
+
+        # Update the key
+        api_key.enc_ciphertext = enc_ciphertext
+        api_key.enc_nonce = enc_nonce
+        api_key.hash = api_key_hash
+        api_key.prefix = prefix
+        api_key.last4 = last4
+
+    # Handle provider config update (only for SUPABASE)
+    provider_config = api_key.provider_config  # Keep existing by default
     if api_key_data.provider == "SUPABASE" and api_key_data.provider_config:
         if isinstance(api_key_data.provider_config, dict):
             provider_config = json.dumps(api_key_data.provider_config)
@@ -164,8 +194,12 @@ def update_api_key(
                     detail="Invalid provider_config JSON"
                 )
 
-    if provider_config is not None:
+    # Only update provider_config if it's being explicitly set for SUPABASE
+    if api_key_data.provider == "SUPABASE":
         api_key.provider_config = provider_config
+    elif api_key_data.provider in ["CUSTOM", "IA"]:
+        # Clear provider_config for CUSTOM and IA
+        api_key.provider_config = None
 
     db.commit()
     db.refresh(api_key)

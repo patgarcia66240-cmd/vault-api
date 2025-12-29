@@ -27,7 +27,7 @@ export interface User {
   stripeId?: string
 }
 
-export type Provider = 'CUSTOM' | 'SUPABASE'
+export type Provider = 'CUSTOM' | 'SUPABASE' | 'IA'
 
 export interface SupabaseConfig {
   url: string

@@ -10,6 +10,7 @@ from app.core.database import Base
 class ProviderType(str, enum.Enum):
     CUSTOM = "CUSTOM"
     SUPABASE = "SUPABASE"
+    IA = "IA"
 
 
 class ApiKey(Base):
