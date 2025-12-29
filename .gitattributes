@@ -1,0 +1,33 @@
+# Normaliser les fins de ligne pour Windows
+* text=auto
+
+# Fichiers source Python (LF)
+*.py text eol=lf
+*.py text eol=lf
+
+# Fichiers de configuration (CRLF sur Windows)
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+
+# Fichiers web (LF)
+*.js text eol=lf
+*.jsx text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+
+# Fichiers de projet (CRLF sur Windows)
+*.txt text eol=crlf
+*.env* text eol=crlf
+
+# Fichiers binaires
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
