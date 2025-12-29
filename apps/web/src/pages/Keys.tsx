@@ -3,18 +3,25 @@ import { GlassCard } from '../components/GlassCard'
 import { Button } from '../components/Button'
 import { Input } from '../components/Input'
 import { Select } from '../components/Select'
-import { useApiKeys, useCreateApiKey, useRevokeApiKey, useGetDecryptedApiKey } from '../lib/services/apiKeyService'
+import { useApiKeys, useCreateApiKey, useRevokeApiKey, useGetDecryptedApiKey, useUpdateApiKey } from '../lib/services/apiKeyService'
 import { ApiKey, Provider, SupabaseConfig } from '../lib/api'
-import { TrashIcon, ClipboardDocumentIcon, CheckIcon, PlusIcon, CloudIcon, ExclamationTriangleIcon, LockClosedIcon } from '@heroicons/react/24/outline'
+import { TrashIcon, ClipboardDocumentIcon, CheckIcon, CloudIcon, ExclamationTriangleIcon, LockClosedIcon, PencilIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
 const SupabaseCard: React.FC<{
   apiKey: ApiKey;
-  onRevoke: (id: string) => void;
-}> = ({ apiKey, onRevoke }) => {
-  const config = apiKey.providerConfig as SupabaseConfig
+  onRevoke: (apiKey: ApiKey) => void;
+  onEdit: (apiKey: ApiKey) => void;
+}> = ({ apiKey, onRevoke, onEdit }) => {
+  const [copiedUrl, setCopiedUrl] = useState(false)
+  const [copiedAnon, setCopiedAnon] = useState(false)
+  const [copiedService, setCopiedService] = useState(false)
 
-  const copyToClipboard = async (text: string) => {
+  const config = apiKey.provider_config ? JSON.parse(apiKey.provider_config) as SupabaseConfig : null
+
+  const handleCopy = async (text: string, setter: (val: boolean) => void) => {
     await navigator.clipboard.writeText(text)
+    setter(true)
+    setTimeout(() => setter(false), 2000)
   }
 
   return (
@@ -37,47 +44,56 @@ const SupabaseCard: React.FC<{
         <div>
           <label className="block text-white/60 text-xs mb-1">URL du projet</label>
           <div className="flex items-center gap-2">
-            <code className="flex-1 px-3 py-2 bg-white/5 rounded-lg text-white/80 text-sm truncate">
-              {config?.url || 'N/A'}
-            </code>
+            <input
+              type="text"
+              readOnly
+              value={config?.url || 'N/A'}
+              className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white/80 text-sm focus:outline-none truncate"
+            />
             <button
-              onClick={() => config?.url && copyToClipboard(config.url)}
+              onClick={() => handleCopy(config?.url || '', setCopiedUrl)}
               className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
               title="Copier l'URL"
             >
-              <ClipboardDocumentIcon className="w-4 h-4" />
+              {copiedUrl ? <CheckIcon className="w-4 h-4" /> : <ClipboardDocumentIcon className="w-4 h-4" />}
             </button>
           </div>
         </div>
 
         <div>
-          <label className="block text-white/60 text-xs mb-1">Anon Key</label>
+          <label className="block text-white/60 text-xs mb-1">Anon Key (publique)</label>
           <div className="flex items-center gap-2">
-            <code className="flex-1 px-3 py-2 bg-white/5 rounded-lg text-white/80 text-sm truncate">
-              {config?.anonKey ? `${config.anonKey.slice(0, 8)}...${config.anonKey.slice(-4)}` : 'N/A'}
-            </code>
+            <input
+              type="text"
+              readOnly
+              value={config?.anonKey ? `${config.anonKey.slice(0, 8)}...${config.anonKey.slice(-4)}` : 'N/A'}
+              className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white/80 text-sm focus:outline-none truncate"
+            />
             <button
-              onClick={() => config?.anonKey && copyToClipboard(config.anonKey)}
+              onClick={() => handleCopy(config?.anonKey || '', setCopiedAnon)}
               className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
               title="Copier l'anon key"
             >
-              <ClipboardDocumentIcon className="w-4 h-4" />
+              {copiedAnon ? <CheckIcon className="w-4 h-4" /> : <ClipboardDocumentIcon className="w-4 h-4" />}
             </button>
           </div>
         </div>
 
         <div>
-          <label className="block text-white/60 text-xs mb-1">Service Role Key</label>
+          <label className="block text-white/60 text-xs mb-1">Service Role Key (privée)</label>
           <div className="flex items-center gap-2">
-            <code className="flex-1 px-3 py-2 bg-white/5 rounded-lg text-white/80 text-sm truncate">
-              {config?.serviceRoleKey ? `${config.serviceRoleKey.slice(0, 8)}...${config.serviceRoleKey.slice(-4)}` : 'N/A'}
-            </code>
+            <input
+              type="text"
+              readOnly
+              value={config?.serviceRoleKey ? `${config.serviceRoleKey.slice(0, 8)}...${config.serviceRoleKey.slice(-4)}` : 'N/A'}
+              className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white/80 text-sm focus:outline-none truncate"
+            />
             <button
-              onClick={() => config?.serviceRoleKey && copyToClipboard(config.serviceRoleKey)}
+              onClick={() => handleCopy(config?.serviceRoleKey || '', setCopiedService)}
               className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
               title="Copier la service role key"
             >
-              <ClipboardDocumentIcon className="w-4 h-4" />
+              {copiedService ? <CheckIcon className="w-4 h-4" /> : <ClipboardDocumentIcon className="w-4 h-4" />}
             </button>
           </div>
         </div>
@@ -85,17 +101,28 @@ const SupabaseCard: React.FC<{
 
       <div className="flex items-center justify-between pt-4 border-t border-white/10">
         <span className="text-white/40 text-xs">
-          Créée le {new Date(apiKey.createdAt).toLocaleDateString()}
+          Créée le {new Date(apiKey.created_at).toLocaleDateString()}
         </span>
-        {!apiKey.revoked && (
-          <button
-            onClick={() => onRevoke(apiKey.id)}
-            className="p-2 text-white/60 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
-            title="Révoquer"
-          >
-            <TrashIcon className="w-5 h-5" />
-          </button>
-        )}
+        <div className="flex gap-2">
+          {!apiKey.revoked && (
+            <>
+              <button
+                onClick={() => onEdit(apiKey)}
+                className="p-2 text-white/60 hover:text-base-yellow hover:bg-white/10 rounded-lg transition-all"
+                title="Modifier"
+              >
+                <PencilIcon className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => onRevoke(apiKey)}
+                className="p-2 text-white/60 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                title="Révoquer"
+              >
+                <TrashIcon className="w-5 h-5" />
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </GlassCard>
   )
@@ -104,15 +131,16 @@ const SupabaseCard: React.FC<{
 
 const ApiKeyCard: React.FC<{
   apiKey: ApiKey;
-  onRevoke: (id: string) => void;
-}> = ({ apiKey, onRevoke }) => {
+  onRevoke: (apiKey: ApiKey) => void;
+  onEdit: (apiKey: ApiKey) => void;
+}> = ({ apiKey, onRevoke, onEdit }) => {
   const [copied, setCopied] = useState(false)
   const decryptMutation = useGetDecryptedApiKey()
 
   const handleCopy = async () => {
     try {
       const result = await decryptMutation.mutateAsync(apiKey.id)
-      await navigator.clipboard.writeText(result.apiKey)
+      await navigator.clipboard.writeText(result.api_key)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (error) {
@@ -126,11 +154,13 @@ const ApiKeyCard: React.FC<{
 
   return (
     <GlassCard hover className="p-6">
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="p-2 bg-base-yellow/20 rounded-lg">
+          <LockClosedIcon className="w-6 h-6 text-base-yellow" />
+        </div>
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-white mb-1">{apiKey.name}</h3>
-          <div className="flex items-center gap-2 text-white/40 text-sm">
-            <span>{apiKey.prefix}...{apiKey.last4}</span>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-white">{apiKey.name}</h3>
             {apiKey.revoked && (
               <span className="px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded-full">
                 Révoquée
@@ -138,33 +168,51 @@ const ApiKeyCard: React.FC<{
             )}
           </div>
         </div>
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-white/60 text-xs mb-1">Clé API</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            readOnly
+            value={`${apiKey.prefix}...${apiKey.last4}`}
+            className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white/80 text-sm focus:outline-none"
+          />
+          <button
+            onClick={handleCopy}
+            className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+            title="Copier la clé"
+          >
+            {copied ? <CheckIcon className="w-4 h-4" /> : <ClipboardDocumentIcon className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between pt-4 border-t border-white/10">
+        <span className="text-white/40 text-xs">
+          Créée le {new Date(apiKey.created_at).toLocaleDateString()}
+        </span>
         <div className="flex gap-2">
           {!apiKey.revoked && (
             <>
               <button
-                onClick={handleCopy}
-                className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all"
-                title="Copier la clé"
+                onClick={() => onEdit(apiKey)}
+                className="p-2 text-white/60 hover:text-base-yellow hover:bg-white/10 rounded-lg transition-all"
+                title="Modifier"
               >
-                {copied ? <CheckIcon className="w-5 h-5" /> : <ClipboardDocumentIcon className="w-5 h-5" />}
+                <PencilIcon className="w-5 h-5" />
               </button>
               <button
-                onClick={() => onRevoke(apiKey.id)}
+                onClick={() => onRevoke(apiKey)}
                 className="p-2 text-white/60 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
-                title="Révoquer la clé"
+                title="Révoquer"
               >
                 <TrashIcon className="w-5 h-5" />
               </button>
             </>
           )}
         </div>
-      </div>
-
-      <div className="flex items-center justify-between text-white/40 text-xs">
-        <span>Créée le {new Date(apiKey.createdAt).toLocaleDateString()}</span>
-        {apiKey.revoked && (
-          <span>Révoquée le {new Date(apiKey.updatedAt).toLocaleDateString()}</span>
-        )}
       </div>
     </GlassCard>
   )
@@ -176,13 +224,40 @@ const AddApiKeyModal: React.FC<{
   onSave: (data: { name: string; value?: string; provider?: Provider; providerConfig?: SupabaseConfig }) => void;
   error?: string;
   isLoading?: boolean;
-}> = ({ isOpen, onClose, onSave, error, isLoading }) => {
+  editingApiKey?: ApiKey | null;
+}> = ({ isOpen, onClose, onSave, error, isLoading, editingApiKey }) => {
   const [name, setName] = useState('')
   const [value, setValue] = useState('')
   const [provider, setProvider] = useState<Provider>('CUSTOM')
   const [supabaseUrl, setSupabaseUrl] = useState('')
   const [supabaseAnonKey, setSupabaseAnonKey] = useState('')
   const [supabaseServiceRoleKey, setSupabaseServiceRoleKey] = useState('')
+
+  // Pré-remplir les champs si on est en mode édition
+  React.useEffect(() => {
+    if (editingApiKey) {
+      setName(editingApiKey.name)
+      setProvider(editingApiKey.provider)
+      if (editingApiKey.provider === 'SUPABASE' && editingApiKey.provider_config) {
+        try {
+          const config = JSON.parse(editingApiKey.provider_config)
+          setSupabaseUrl(config.url || '')
+          setSupabaseAnonKey(config.anonKey || '')
+          setSupabaseServiceRoleKey(config.serviceRoleKey || '')
+        } catch (e) {
+          console.error('Erreur parsing provider_config:', e)
+        }
+      }
+    } else {
+      // Reset si pas en mode édition
+      setName('')
+      setValue('')
+      setProvider('CUSTOM')
+      setSupabaseUrl('')
+      setSupabaseAnonKey('')
+      setSupabaseServiceRoleKey('')
+    }
+  }, [editingApiKey, isOpen])
 
   if (!isOpen) return null
 
@@ -192,8 +267,7 @@ const AddApiKeyModal: React.FC<{
     if (!name.trim()) return
 
     if (provider === 'SUPABASE') {
-      if (!supabaseUrl.trim() || !supabaseAnonKey.trim() || !supabaseServiceRoleKey.trim()) return
-
+      // Permettre de sauvegarder même si certains champs sont vides
       onSave({
         name: name.trim(),
         provider: 'SUPABASE',
@@ -228,7 +302,7 @@ const AddApiKeyModal: React.FC<{
       <GlassCard className="w-full max-w-lg animate-slide-up">
         <div className="p-6">
           <h3 className="text-xl font-bold text-white mb-4">
-            Créer une nouvelle clé API
+            {editingApiKey ? 'Modifier la clé API' : 'Créer une nouvelle clé API'}
           </h3>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -274,7 +348,6 @@ const AddApiKeyModal: React.FC<{
                     placeholder="https://xxxxxxxx.supabase.co"
                     value={supabaseUrl}
                     onChange={setSupabaseUrl}
-                    required
                   />
                 </div>
 
@@ -284,7 +357,6 @@ const AddApiKeyModal: React.FC<{
                     placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                     value={supabaseAnonKey}
                     onChange={setSupabaseAnonKey}
-                    required
                   />
                 </div>
 
@@ -294,7 +366,6 @@ const AddApiKeyModal: React.FC<{
                     placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
                     value={supabaseServiceRoleKey}
                     onChange={setSupabaseServiceRoleKey}
-                    required
                   />
                   <p className="text-white/40 text-xs mt-1 flex items-center gap-1">
                     <ExclamationTriangleIcon className="w-3 h-3" />
@@ -334,7 +405,7 @@ const AddApiKeyModal: React.FC<{
                 Annuler
               </Button>
               <Button type="submit" className="flex-1" disabled={isLoading}>
-                {isLoading ? 'Création...' : 'Créer la clé'}
+                {isLoading ? (editingApiKey ? 'Modification...' : 'Création...') : (editingApiKey ? 'Sauvegarder' : 'Créer la clé')}
               </Button>
             </div>
           </form>
@@ -422,6 +493,7 @@ const RevealApiKeyModal: React.FC<{
 
 export const Keys: React.FC = () => {
   const [showModal, setShowModal] = useState(false)
+  const [editingApiKey, setEditingApiKey] = useState<ApiKey | null>(null)
   const [newApiKey, setNewApiKey] = useState<{
     apiKey: string;
     prefix: string;
@@ -430,26 +502,47 @@ export const Keys: React.FC = () => {
     createdAt: string;
   } | null>(null)
   const [creationError, setCreationError] = useState<string>('')
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{ id: string; name: string } | null>(null)
 
   const { data: apiKeysResponse, isLoading, error } = useApiKeys()
   const createApiKeyMutation = useCreateApiKey()
+  const updateApiKeyMutation = useUpdateApiKey()
   const revokeApiKeyMutation = useRevokeApiKey()
 
-  const handleCreateApiKey = (data: { name: string; value?: string; provider?: Provider; providerConfig?: SupabaseConfig }) => {
+  const handleCreateApiKey = async (data: { name: string; value?: string; provider?: Provider; providerConfig?: SupabaseConfig }) => {
     setCreationError('')
-    createApiKeyMutation.mutate(data, {
-      onSuccess: (response) => {
+
+    // Si on est en mode édition, utiliser updateApiKeyMutation
+    if (editingApiKey) {
+      try {
+        await updateApiKeyMutation.mutateAsync({ id: editingApiKey.id, data })
+        setShowModal(false)
+        setEditingApiKey(null)
+        setCreationError('')
+      } catch (error: any) {
+        console.error('Error updating API key:', error)
+        setCreationError(error?.response?.data?.error || 'Erreur lors de la modification de la clé API')
+      }
+    } else {
+      // Sinon, créer une nouvelle clé
+      try {
+        const response = await createApiKeyMutation.mutateAsync(data)
         // Only show reveal modal for custom keys
         if (data.provider === 'SUPABASE') {
           setShowModal(false)
           setCreationError('')
         } else {
-          setNewApiKey(response)
+          setNewApiKey({
+            apiKey: response.api_key,
+            prefix: response.prefix,
+            last4: response.last4,
+            name: response.name,
+            createdAt: response.created_at
+          })
           setShowModal(false)
           setCreationError('')
         }
-      },
-      onError: (error: any) => {
+      } catch (error: any) {
         console.error('Error creating API key:', error)
         if (error?.response?.data?.error === 'Validation error') {
           const details = error.response.data.details
@@ -462,26 +555,42 @@ export const Keys: React.FC = () => {
         } else {
           setCreationError(error?.response?.data?.error || 'Erreur lors de la création de la clé API')
         }
-      },
-    })
+      }
+    }
   }
 
   const handleCloseModal = () => {
     setShowModal(false)
+    setEditingApiKey(null)
     setCreationError('')
   }
 
-  const handleRevokeApiKey = (id: string) => {
-    if (confirm('Êtes-vous sûr de vouloir révoquer cette clé API ? Elle ne pourra plus être utilisée.')) {
-      revokeApiKeyMutation.mutate(id)
+  const handleEditApiKey = (apiKey: ApiKey) => {
+    setEditingApiKey(apiKey)
+    setShowModal(true)
+    setCreationError('')
+  }
+
+  const handleRevokeApiKey = (apiKey: ApiKey) => {
+    setDeleteConfirmation({ id: apiKey.id, name: apiKey.name })
+  }
+
+  const confirmDelete = () => {
+    if (deleteConfirmation) {
+      revokeApiKeyMutation.mutate(deleteConfirmation.id)
+      setDeleteConfirmation(null)
     }
+  }
+
+  const cancelDelete = () => {
+    setDeleteConfirmation(null)
   }
 
   const closeRevealModal = () => {
     setNewApiKey(null)
   }
 
-  const apiKeys = apiKeysResponse?.apiKeys || []
+  const apiKeys = apiKeysResponse || []
 
   if (error) {
     return (
@@ -507,10 +616,12 @@ export const Keys: React.FC = () => {
           </div>
 
           <Button
-            onClick={() => setShowModal(true)}
-            disabled={createApiKeyMutation.isPending}
+            onClick={() => {
+              setEditingApiKey(null)
+              setShowModal(true)
+            }}
+            disabled={createApiKeyMutation.isPending || updateApiKeyMutation.isPending}
           >
-            <PlusIcon className="w-5 h-5 mr-2" />
             Créer une clé
           </Button>
         </header>
@@ -546,24 +657,24 @@ export const Keys: React.FC = () => {
               <p className="text-white/40 text-sm mb-4">
                 Créez votre première clé pour commencer
               </p>
-              <Button onClick={() => setShowModal(true)}>
-                Créer une clé
-              </Button>
+              
             </GlassCard>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {apiKeys.map((apiKey) => (
+              {apiKeys.map((apiKey: ApiKey) => (
                 apiKey.provider === 'SUPABASE' ? (
                   <SupabaseCard
                     key={apiKey.id}
                     apiKey={apiKey}
                     onRevoke={handleRevokeApiKey}
+                    onEdit={handleEditApiKey}
                   />
                 ) : (
                   <ApiKeyCard
                     key={apiKey.id}
                     apiKey={apiKey}
                     onRevoke={handleRevokeApiKey}
+                    onEdit={handleEditApiKey}
                   />
                 )
               ))}
@@ -577,7 +688,8 @@ export const Keys: React.FC = () => {
         onClose={handleCloseModal}
         onSave={handleCreateApiKey}
         error={creationError}
-        isLoading={createApiKeyMutation.isPending}
+        isLoading={createApiKeyMutation.isPending || updateApiKeyMutation.isPending}
+        editingApiKey={editingApiKey}
       />
 
       <RevealApiKeyModal
@@ -585,6 +697,49 @@ export const Keys: React.FC = () => {
         onClose={closeRevealModal}
         apiKeyData={newApiKey}
       />
+
+      {/* Modal de confirmation de suppression */}
+      {deleteConfirmation && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <GlassCard className="w-full max-w-md animate-slide-up">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-3 bg-red-500/20 rounded-full">
+                  <ExclamationTriangleIcon className="w-6 h-6 text-red-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white">
+                  Confirmer la suppression
+                </h3>
+              </div>
+
+              <p className="text-white/80 mb-2">
+                Êtes-vous sûr de vouloir révoquer cette clé API ?
+              </p>
+
+              <p className="text-white/60 mb-6">
+                <span className="font-semibold text-white">{deleteConfirmation.name}</span> ne pourra plus être utilisée. Cette action est irréversible.
+              </p>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="secondary"
+                  onClick={cancelDelete}
+                  className="flex-1"
+                >
+                  Annuler
+                </Button>
+                <Button
+                  onClick={confirmDelete}
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white"
+                  disabled={revokeApiKeyMutation.isPending}
+                >
+                  {revokeApiKeyMutation.isPending ? 'Suppression...' : 'Révoquer la clé'}
+                </Button>
+              </div>
+            </div>
+          </GlassCard>
+        </div>
+      )}
     </div>
   )
 }

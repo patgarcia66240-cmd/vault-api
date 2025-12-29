@@ -12,12 +12,14 @@ class ApiKeyBase(BaseModel):
 class ApiKeyCreate(ApiKeyBase):
     provider: ProviderType = ProviderType.CUSTOM
     provider_config: Optional[str] = None
+    value: Optional[str] = None  # For custom API keys
 
 
 class ApiKeyResponse(BaseModel):
     id: UUID
     name: str
     provider: ProviderType
+    provider_config: Optional[str] = None
     prefix: str
     last4: str
     revoked: bool
