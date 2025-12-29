@@ -16,6 +16,8 @@ export const useLogin = () => {
     mutationFn: (data: LoginData) =>
       api.post('/api/auth/login', data).then(res => res.data),
     onSuccess: (data) => {
+      // Store JWT token in localStorage
+      localStorage.setItem('token', data.access_token)
       queryClient.setQueryData(['user'], data.user)
     },
   })

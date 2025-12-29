@@ -2,15 +2,15 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import crypto_manager
-from app.models.user import User
+from app.models.user import UserProfile
 from app.models.apikey import ApiKey
-from app.schemas.apikey import ApiKeyCreate, ApiKeyResponse, ApiKeyDetailResponse
+from app.schemas.apikey import ApiKeyCreate, ApiKeyResponse, ApiKeyDetailResponse, ApiKeysList
 from app.routes.auth import get_current_user
 import secrets
 import hashlib
 import json
 
-router = APIRouter(prefix="/apikeys", tags=["apikeys"])
+router = APIRouter(prefix="/keys", tags=["apikeys"])
 
 
 def generate_api_key() -> str:
@@ -49,7 +49,7 @@ def get_api_key_parts(api_key: str) -> tuple[str, str]:
 @router.post("", response_model=ApiKeyDetailResponse, status_code=status.HTTP_201_CREATED)
 def create_api_key(
     api_key_data: ApiKeyCreate,
-    current_user: User = Depends(get_current_user),
+    current_user: UserProfile = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Create a new API key"""
@@ -66,15 +66,19 @@ def create_api_key(
     # Handle provider config
     provider_config = None
     if api_key_data.provider == "SUPABASE" and api_key_data.provider_config:
-        # Validate JSON
-        try:
-            json.loads(api_key_data.provider_config)
-            provider_config = api_key_data.provider_config
-        except json.JSONDecodeError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid provider_config JSON"
-            )
+        # If it's a dict, convert to JSON string
+        if isinstance(api_key_data.provider_config, dict):
+            provider_config = json.dumps(api_key_data.provider_config)
+        # If it's already a string, validate JSON
+        elif isinstance(api_key_data.provider_config, str):
+            try:
+                json.loads(api_key_data.provider_config)
+                provider_config = api_key_data.provider_config
+            except json.JSONDecodeError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid provider_config JSON"
+                )
 
     # Create API key record
     new_api_key = ApiKey(
@@ -95,14 +99,22 @@ def create_api_key(
 
     # Return with plain API key (only shown once)
     return {
-        **ApiKeyDetailResponse.model_validate(new_api_key).model_dump(),
+        "id": str(new_api_key.id),
+        "name": new_api_key.name,
+        "provider": new_api_key.provider,
+        "provider_config": new_api_key.provider_config,
+        "prefix": new_api_key.prefix,
+        "last4": new_api_key.last4,
+        "revoked": new_api_key.revoked,
+        "created_at": new_api_key.created_at.isoformat(),
+        "updated_at": new_api_key.updated_at.isoformat(),
         "api_key": api_key_plain
     }
 
 
-@router.get("", response_model=list[ApiKeyResponse])
+@router.get("", response_model=ApiKeysList)
 def list_api_keys(
-    current_user: User = Depends(get_current_user),
+    current_user: UserProfile = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """List all API keys for current user"""
@@ -111,13 +123,96 @@ def list_api_keys(
         ApiKey.revoked == False
     ).all()
 
-    return api_keys
+    return {"apiKeys": api_keys}
+
+
+@router.put("/{api_key_id}")
+def update_api_key(
+    api_key_id: str,
+    api_key_data: ApiKeyCreate,
+    current_user: UserProfile = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Update an API key (name or provider config)"""
+    api_key = db.query(ApiKey).filter(
+        ApiKey.id == api_key_id,
+        ApiKey.user_id == current_user.id
+    ).first()
+
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="API key not found"
+        )
+
+    # Update name
+    if api_key_data.name:
+        api_key.name = api_key_data.name
+
+    # Handle provider config update
+    provider_config = None
+    if api_key_data.provider == "SUPABASE" and api_key_data.provider_config:
+        if isinstance(api_key_data.provider_config, dict):
+            provider_config = json.dumps(api_key_data.provider_config)
+        elif isinstance(api_key_data.provider_config, str):
+            try:
+                json.loads(api_key_data.provider_config)
+                provider_config = api_key_data.provider_config
+            except json.JSONDecodeError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid provider_config JSON"
+                )
+
+    if provider_config is not None:
+        api_key.provider_config = provider_config
+
+    db.commit()
+    db.refresh(api_key)
+
+    return {
+        "id": str(api_key.id),
+        "name": api_key.name,
+        "provider": api_key.provider,
+        "provider_config": api_key.provider_config,
+        "prefix": api_key.prefix,
+        "last4": api_key.last4,
+        "revoked": api_key.revoked,
+        "created_at": api_key.created_at.isoformat(),
+        "updated_at": api_key.updated_at.isoformat()
+    }
+
+
+@router.get("/{api_key_id}/decrypt")
+def reveal_api_key(
+    api_key_id: str,
+    current_user: UserProfile = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Reveal the decrypted API key (one-time operation)"""
+    api_key = db.query(ApiKey).filter(
+        ApiKey.id == api_key_id,
+        ApiKey.user_id == current_user.id
+    ).first()
+
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="API key not found"
+        )
+
+    # Decrypt the API key
+    decrypted_key = crypto_manager.decrypt(api_key.enc_ciphertext, api_key.enc_nonce)
+
+    return {
+        "api_key": decrypted_key
+    }
 
 
 @router.delete("/{api_key_id}", status_code=status.HTTP_204_NO_CONTENT)
 def revoke_api_key(
     api_key_id: str,
-    current_user: User = Depends(get_current_user),
+    current_user: UserProfile = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Revoke an API key"""

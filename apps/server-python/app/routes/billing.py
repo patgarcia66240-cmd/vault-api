@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.models.user import User
+from app.models.user import UserProfile
 from app.routes.auth import get_current_user
 from typing import List
 from pydantic import BaseModel
@@ -10,7 +10,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/billing", tags=["billing"])
+router = APIRouter(prefix="/billing", tags=["billing"])
 
 
 class Invoice(BaseModel):
@@ -24,7 +24,7 @@ class Invoice(BaseModel):
 
 @router.get("/invoices", response_model=List[Invoice])
 def get_invoices(
-    current_user: User = Depends(get_current_user),
+    current_user: UserProfile = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -40,7 +40,7 @@ def get_invoices(
 
 @router.get("/subscription")
 def get_subscription(
-    current_user: User = Depends(get_current_user),
+    current_user: UserProfile = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """

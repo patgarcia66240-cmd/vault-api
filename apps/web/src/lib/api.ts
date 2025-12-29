@@ -10,6 +10,15 @@ export const api = axios.create({
   },
 })
 
+// Add JWT token to every request
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
+
 export interface User {
   id: string
   email: string
@@ -30,22 +39,22 @@ export interface ApiKey {
   id: string
   name: string
   provider: Provider
-  providerConfig?: SupabaseConfig
+  provider_config?: string  // JSON string of SupabaseConfig
   prefix: string
   last4: string
   revoked: boolean
-  createdAt: string
-  updatedAt: string
+  created_at: string
+  updated_at: string
 }
 
 export interface CreateApiKeyResponse {
-  apiKey: string
+  api_key: string
   prefix: string
   last4: string
   name: string
-  createdAt: string
+  created_at: string
   provider?: Provider
-  providerConfig?: SupabaseConfig
+  provider_config?: string  // JSON string of SupabaseConfig
 }
 
 export interface ApiKeysResponse {
@@ -66,5 +75,5 @@ export interface CreateApiKeyData {
   name: string
   value?: string
   provider?: Provider
-  providerConfig?: SupabaseConfig
+  provider_config?: SupabaseConfig  // Send as object, backend will stringify
 }

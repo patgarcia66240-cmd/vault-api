@@ -43,7 +43,7 @@ class Settings(BaseSettings):
         return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
 
     class Config:
-        # Chemin absolu vers le fichier .env du serveur
+        # Chemin vers le fichier .env (remonte de app/core/ vers apps/server-python/)
         env_file = Path(__file__).parent.parent.parent / ".env"
         case_sensitive = True
         extra = "ignore"

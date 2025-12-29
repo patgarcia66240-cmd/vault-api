@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import engine, Base
-from app.routes import auth, apikeys
+from app.routes import auth, apikeys, billing
 
 # Create FastAPI app
 app = FastAPI(
@@ -21,15 +21,16 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(auth.router)
-app.include_router(apikeys.router)
+app.include_router(auth.router, prefix="/api")
+app.include_router(apikeys.router, prefix="/api")
+app.include_router(billing.router, prefix="/api")
 
 
 @app.on_event("startup")
 async def startup_event():
     """Create database tables on startup"""
     # In production, use Alembic migrations instead
-    # Base.metadata.create_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
 
 
 @app.get("/")

@@ -33,6 +33,18 @@ export const useRevokeApiKey = () => {
   })
 }
 
+export const useUpdateApiKey = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: CreateApiKeyData }) =>
+      api.put(`/api/keys/${id}`, data).then(res => res.data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['apiKeys'] })
+    },
+  })
+}
+
 export const useGetDecryptedApiKey = () => {
   return useMutation({
     mutationFn: (apiKeyId: string) =>

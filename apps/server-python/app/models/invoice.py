@@ -19,7 +19,7 @@ class Invoice(Base):
     __tablename__ = "invoices"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user_profiles.id", ondelete="CASCADE"), nullable=False)
     stripe_invoice_id = Column(String, unique=True, nullable=False, index=True)
     amount = Column(Integer, nullable=False)  # Amount in cents
     currency = Column(String, default="usd", nullable=False)
@@ -33,7 +33,7 @@ class Invoice(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
-    user = relationship("User", back_populates="invoices")
+    user_profile = relationship("UserProfile", back_populates="invoices")
 
     def __repr__(self):
         return f"<Invoice {self.stripe_invoice_id}>"

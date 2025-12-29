@@ -16,7 +16,7 @@ class ApiKey(Base):
     __tablename__ = "api_keys"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user_profiles.id", ondelete="CASCADE"), nullable=False)
     name = Column(String, nullable=False)
     provider = Column(SQLEnum(ProviderType), default=ProviderType.CUSTOM, nullable=False)
     provider_config = Column(Text, nullable=True)  # JSON string for Supabase config
@@ -30,7 +30,7 @@ class ApiKey(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
     # Relationships
-    user = relationship("User", back_populates="api_keys")
+    user_profile = relationship("UserProfile", back_populates="api_keys")
 
     def __repr__(self):
         return f"<ApiKey {self.prefix}***{self.last4}>"

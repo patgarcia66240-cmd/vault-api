@@ -5,7 +5,7 @@ import { Input } from '../components/Input'
 import { Select } from '../components/Select'
 import { useApiKeys, useCreateApiKey, useRevokeApiKey, useGetDecryptedApiKey, useUpdateApiKey } from '../lib/services/apiKeyService'
 import { ApiKey, Provider, SupabaseConfig } from '../lib/api'
-import { TrashIcon, ClipboardDocumentIcon, CheckIcon, CloudIcon, ExclamationTriangleIcon, LockClosedIcon, PencilIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { TrashIcon, ClipboardDocumentIcon, CheckIcon, CloudIcon, ExclamationTriangleIcon, LockClosedIcon, PencilIcon } from '@heroicons/react/24/outline'
 
 const SupabaseCard: React.FC<{
   apiKey: ApiKey;
@@ -221,7 +221,7 @@ const ApiKeyCard: React.FC<{
 const AddApiKeyModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: { name: string; value?: string; provider?: Provider; providerConfig?: SupabaseConfig }) => void;
+  onSave: (data: { name: string; value?: string; provider?: Provider; provider_config?: SupabaseConfig }) => void;
   error?: string;
   isLoading?: boolean;
   editingApiKey?: ApiKey | null;
@@ -271,7 +271,7 @@ const AddApiKeyModal: React.FC<{
       onSave({
         name: name.trim(),
         provider: 'SUPABASE',
-        providerConfig: {
+        provider_config: {
           url: supabaseUrl.trim(),
           anonKey: supabaseAnonKey.trim(),
           serviceRoleKey: supabaseServiceRoleKey.trim()
@@ -419,11 +419,11 @@ const RevealApiKeyModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   apiKeyData: {
-    apiKey: string;
+    api_key: string;
     prefix: string;
     last4: string;
     name: string;
-    createdAt: string;
+    created_at: string;
   } | null;
 }> = ({ isOpen, onClose, apiKeyData }) => {
   const [copied, setCopied] = useState(false)
@@ -431,7 +431,7 @@ const RevealApiKeyModal: React.FC<{
   if (!isOpen || !apiKeyData) return null
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(apiKeyData.apiKey)
+    await navigator.clipboard.writeText(apiKeyData.api_key)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -456,7 +456,7 @@ const RevealApiKeyModal: React.FC<{
               <div className="relative">
                 <input
                   type="text"
-                  value={apiKeyData.apiKey}
+                  value={apiKeyData.api_key}
                   readOnly
                   className="w-full px-4 py-3 pr-12 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-base-yellow/50 focus:border-base-yellow/50 transition-all duration-200"
                 />
@@ -495,11 +495,11 @@ export const Keys: React.FC = () => {
   const [showModal, setShowModal] = useState(false)
   const [editingApiKey, setEditingApiKey] = useState<ApiKey | null>(null)
   const [newApiKey, setNewApiKey] = useState<{
-    apiKey: string;
+    api_key: string;
     prefix: string;
     last4: string;
     name: string;
-    createdAt: string;
+    created_at: string;
   } | null>(null)
   const [creationError, setCreationError] = useState<string>('')
   const [deleteConfirmation, setDeleteConfirmation] = useState<{ id: string; name: string } | null>(null)
@@ -509,7 +509,7 @@ export const Keys: React.FC = () => {
   const updateApiKeyMutation = useUpdateApiKey()
   const revokeApiKeyMutation = useRevokeApiKey()
 
-  const handleCreateApiKey = async (data: { name: string; value?: string; provider?: Provider; providerConfig?: SupabaseConfig }) => {
+  const handleCreateApiKey = async (data: { name: string; value?: string; provider?: Provider; provider_config?: SupabaseConfig }) => {
     setCreationError('')
 
     // Si on est en mode édition, utiliser updateApiKeyMutation
@@ -533,11 +533,11 @@ export const Keys: React.FC = () => {
           setCreationError('')
         } else {
           setNewApiKey({
-            apiKey: response.api_key,
+            api_key: response.api_key,
             prefix: response.prefix,
             last4: response.last4,
             name: response.name,
-            createdAt: response.created_at
+            created_at: response.created_at
           })
           setShowModal(false)
           setCreationError('')
@@ -590,7 +590,7 @@ export const Keys: React.FC = () => {
     setNewApiKey(null)
   }
 
-  const apiKeys = apiKeysResponse || []
+  const apiKeys = apiKeysResponse?.apiKeys || []
 
   if (error) {
     return (
