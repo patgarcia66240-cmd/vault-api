@@ -14,6 +14,21 @@ build/
 # OS generated files
 .DS_Store
 Thumbs.db
+nul
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.log
+vault_api.log
+
+# Test files
+test_*.py
+*_test.py
+*.pyc
 
 # IDE files
 .vscode/
