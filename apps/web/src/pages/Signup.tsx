@@ -71,6 +71,7 @@ export const Signup: React.FC = () => {
               onChange={setPassword}
               error={errors.password}
               required
+              showPasswordToggle
             />
 
             <Input
@@ -81,6 +82,7 @@ export const Signup: React.FC = () => {
               onChange={setConfirmPassword}
               error={errors.confirmPassword}
               required
+              showPasswordToggle
             />
 
             <Button

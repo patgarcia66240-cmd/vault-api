@@ -68,6 +68,7 @@ export const Login: React.FC = () => {
               onChange={setPassword}
               error={errors.password}
               required
+              showPasswordToggle
             />
 
             <Button
