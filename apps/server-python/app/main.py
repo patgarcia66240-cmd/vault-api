@@ -143,61 +143,75 @@ async def test_database():
 
     start_time = time.time()
 
-    try:
-        # Test 1: Connexion simple
-        with engine.connect() as conn:
-            # Test 2: Requete de version
-            version_result = conn.execute(text("SELECT version()"))
-            version = version_result.fetchone()[0]
+    # Essayer la connexion jusqu'a 3 fois (pour gerer le fallback IPv6 -> IPv4)
+    max_retries = 3
+    last_error = None
 
-            # Test 3: Compter les tables
-            tables_result = conn.execute(text("""
-                SELECT COUNT(*) FROM information_schema.tables
-                WHERE table_schema = 'public'
-            """))
-            tables_count = tables_result.fetchone()[0]
+    for attempt in range(max_retries):
+        try:
+            # Test 1: Connexion simple
+            with engine.connect() as conn:
+                # Test 2: Requete de version
+                version_result = conn.execute(text("SELECT version()"))
+                version = version_result.fetchone()[0]
 
-            # Test 4: Compter les utilisateurs
-            try:
-                users_result = conn.execute(text("SELECT COUNT(*) FROM users"))
-                users_count = users_result.fetchone()[0]
-            except:
-                users_count = 0
+                # Test 3: Compter les tables
+                tables_result = conn.execute(text("""
+                    SELECT COUNT(*) FROM information_schema.tables
+                    WHERE table_schema = 'public'
+                """))
+                tables_count = tables_result.fetchone()[0]
 
-            # Test 5: Infos de connexion
-            info_result = conn.execute(text("""
-                SELECT
-                    inet_server_addr() as server_ip,
-                    inet_server_port() as server_port,
-                    current_database() as database,
-                    current_user as user
-            """))
-            server_ip, server_port, database, user = info_result.fetchone()
+                # Test 4: Compter les utilisateurs
+                try:
+                    users_result = conn.execute(text("SELECT COUNT(*) FROM users"))
+                    users_count = users_result.fetchone()[0]
+                except:
+                    users_count = 0
 
-            elapsed = (time.time() - start_time) * 1000
+                # Test 5: Infos de connexion
+                info_result = conn.execute(text("""
+                    SELECT
+                        inet_server_addr() as server_ip,
+                        inet_server_port() as server_port,
+                        current_database() as database,
+                        current_user as user
+                """))
+                server_ip, server_port, database, user = info_result.fetchone()
 
-            result.update({
-                "status": "connected",
-                "database": {
-                    "server_ip": server_ip,
-                    "server_port": server_port,
-                    "database_name": database,
-                    "user": user,
-                    "postgresql_version": version.split(",")[0] if version else "unknown",
-                    "tables_count": tables_count,
-                    "users_count": users_count
-                },
-                "timing_ms": round(elapsed, 2),
-                "error": None
-            })
+                elapsed = (time.time() - start_time) * 1000
 
-    except Exception as e:
-        elapsed = (time.time() - start_time) * 1000
-        result.update({
-            "status": "error",
-            "timing_ms": round(elapsed, 2),
-            "error": str(e)
-        })
+                result.update({
+                    "status": "connected",
+                    "database": {
+                        "server_ip": server_ip,
+                        "server_port": server_port,
+                        "database_name": database,
+                        "user": user,
+                        "postgresql_version": version.split(",")[0] if version else "unknown",
+                        "tables_count": tables_count,
+                        "users_count": users_count
+                    },
+                    "timing_ms": round(elapsed, 2),
+                    "error": None
+                })
+
+                # Succes ! On retourne le resultat
+                return result
+
+        except Exception as e:
+            last_error = e
+            # Si ce n'est pas la derniere tentative, on continue
+            if attempt < max_retries - 1:
+                continue
+
+    # Si on arrive ici, toutes les tentatives ont echoue
+    elapsed = (time.time() - start_time) * 1000
+    result.update({
+        "status": "error",
+        "timing_ms": round(elapsed, 2),
+        "error": str(last_error)
+    })
 
     return result
 

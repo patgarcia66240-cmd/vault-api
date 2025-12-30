@@ -4,8 +4,8 @@ from sqlalchemy.orm import sessionmaker
 from app.core.config import settings
 
 # Create SQLAlchemy engine with connection pooling
-# Note: psycopg v3 handles connection pooling automatically
-# Use connect_timeout for better reliability on Render
+# Note: Supabase uses IPv6 which may show connection errors at startup
+# but real queries will work fine with automatic fallback
 engine = create_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,
