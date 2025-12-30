@@ -38,7 +38,13 @@ app.include_router(billing.router, prefix="/api")
 async def startup_event():
     """Create database tables on startup"""
     # In production, use Alembic migrations instead
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        # Log error but don't prevent startup
+        import logging
+        logging.error(f"Warning: Could not connect to database on startup: {e}")
+        logging.warning("Application will start, but database operations may fail")
 
 
 @app.get("/")
