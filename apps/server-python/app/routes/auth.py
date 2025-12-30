@@ -255,3 +255,88 @@ def get_me(current_user: UserProfile = Depends(get_current_user), db: Session = 
 
     # Retourner les user data dans un objet "user" comme attendu par le frontend
     return {"user": user_response}
+
+
+@router.post("/admin/create-test-user")
+async def create_test_user(email: str, password: str, db: Session = Depends(get_db)):
+    """
+    Admin endpoint - Crée un utilisateur de test
+    À UTILISER SEULEMENT POUR LES TESTS/DEV
+
+    Exemple: /api/auth/admin/create-test-user?email=test@test.com&password=test123456!
+    """
+    try:
+        # Vérifier si l'utilisateur existe déjà
+        result = db.execute(
+            text("SELECT id, email FROM auth.users WHERE email = :email"),
+            {"email": email}
+        )
+        existing_user = result.fetchone()
+
+        if existing_user:
+            return {
+                "status": "error",
+                "message": "User already exists",
+                "email": email,
+                "user_id": existing_user[0]
+            }
+
+        # Générer un UUID pour le nouvel utilisateur
+        user_id = str(uuid.uuid4())
+
+        # Hasher le mot de passe
+        password_hash = get_password_hash(password)
+
+        # Insérer dans auth.users (table système Supabase)
+        db.execute(
+            text("""
+                INSERT INTO auth.users (
+                    instance_id, id, aud, role, email,
+                    encrypted_password, email_confirmed_at,
+                    created_at, updated_at, last_sign_in_at
+                ) VALUES (
+                    '00000000-0000-0000-0000-000000000000',
+                    :id,
+                    'authenticated',
+                    'authenticated',
+                    :email,
+                    :password_hash,
+                    NOW(),
+                    NOW(),
+                    NOW(),
+                    NOW()
+                )
+            """),
+            {
+                "id": user_id,
+                "email": email,
+                "password_hash": password_hash
+            }
+        )
+
+        # Créer le profil dans user_profiles
+        user_profile = UserProfile(id=user_id, plan="FREE")
+        db.add(user_profile)
+        db.commit()
+        db.refresh(user_profile)
+
+        return {
+            "status": "success",
+            "message": "Test user created successfully",
+            "user": {
+                "id": user_id,
+                "email": email,
+                "plan": "FREE"
+            },
+            "credentials": {
+                "email": email,
+                "password": password
+            }
+        }
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create test user: {str(e)}"
+        )
