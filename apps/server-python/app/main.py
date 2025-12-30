@@ -111,6 +111,7 @@ async def root():
         "status": "running",
         "endpoints": {
             "health": "/health",
+            "test_db": "/test-db",
             "auth": "/api/auth",
             "apiKeys": "/api/apikeys",
             "docs": "/docs"
@@ -122,6 +123,83 @@ async def root():
 async def health_check():
     """Health check endpoint"""
     return {"status": "ok"}
+
+
+@app.get("/test-db")
+async def test_database():
+    """
+    Test de connectivite a la base de donnees
+    Retourne des infos detaillees sur la connexion
+    """
+    from sqlalchemy import text
+    import time
+
+    result = {
+        "status": "unknown",
+        "database": {},
+        "timing_ms": 0,
+        "error": None
+    }
+
+    start_time = time.time()
+
+    try:
+        # Test 1: Connexion simple
+        with engine.connect() as conn:
+            # Test 2: Requete de version
+            version_result = conn.execute(text("SELECT version()"))
+            version = version_result.fetchone()[0]
+
+            # Test 3: Compter les tables
+            tables_result = conn.execute(text("""
+                SELECT COUNT(*) FROM information_schema.tables
+                WHERE table_schema = 'public'
+            """))
+            tables_count = tables_result.fetchone()[0]
+
+            # Test 4: Compter les utilisateurs
+            try:
+                users_result = conn.execute(text("SELECT COUNT(*) FROM users"))
+                users_count = users_result.fetchone()[0]
+            except:
+                users_count = 0
+
+            # Test 5: Infos de connexion
+            info_result = conn.execute(text("""
+                SELECT
+                    inet_server_addr() as server_ip,
+                    inet_server_port() as server_port,
+                    current_database() as database,
+                    current_user as user
+            """))
+            server_ip, server_port, database, user = info_result.fetchone()
+
+            elapsed = (time.time() - start_time) * 1000
+
+            result.update({
+                "status": "connected",
+                "database": {
+                    "server_ip": server_ip,
+                    "server_port": server_port,
+                    "database_name": database,
+                    "user": user,
+                    "postgresql_version": version.split(",")[0] if version else "unknown",
+                    "tables_count": tables_count,
+                    "users_count": users_count
+                },
+                "timing_ms": round(elapsed, 2),
+                "error": None
+            })
+
+    except Exception as e:
+        elapsed = (time.time() - start_time) * 1000
+        result.update({
+            "status": "error",
+            "timing_ms": round(elapsed, 2),
+            "error": str(e)
+        })
+
+    return result
 
 
 if __name__ == "__main__":
