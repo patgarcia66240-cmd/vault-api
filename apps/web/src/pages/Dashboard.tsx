@@ -21,7 +21,7 @@ const ApiKeyCard: React.FC<{ apiKey: ApiKey; onRevoke: (id: string) => void }> =
         <div>
           <h3 className="text-lg font-semibold text-white mb-1">{apiKey.name}</h3>
           <p className="text-sm text-white/60">
-            Created: {new Date(apiKey.createdAt).toLocaleDateString()}
+            Created: {new Date(apiKey.created_at).toLocaleDateString()}
           </p>
         </div>
         <div className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -71,7 +71,7 @@ const NewApiKeyModal: React.FC<{
   if (!isOpen || !apiKeyData) return null
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(apiKeyData.apiKey)
+    await navigator.clipboard.writeText(apiKeyData.api_key)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -91,7 +91,7 @@ const NewApiKeyModal: React.FC<{
           <div className="bg-black/50 rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between">
               <code className="text-base-yellow font-mono text-sm break-all mr-2">
-                {apiKeyData.apiKey}
+                {apiKeyData.api_key}
               </code>
               <Button
                 variant="secondary"

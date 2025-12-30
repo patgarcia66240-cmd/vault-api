@@ -1,8 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from app.core.config import settings
 from app.core.database import engine, Base
 from app.routes import auth, apikeys, billing
+from pathlib import Path
 
 # Create FastAPI app
 app = FastAPI(
@@ -10,6 +13,11 @@ app = FastAPI(
     description="API Key Management Service",
     version="1.0.0"
 )
+
+# Mount static files directory
+static_dir = Path(__file__).parent.parent / "static"
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 # Configure CORS
 app.add_middleware(
@@ -35,7 +43,10 @@ async def startup_event():
 
 @app.get("/")
 async def root():
-    """Root endpoint"""
+    """Root endpoint - Serve the landing page"""
+    index_file = static_dir / "index.html"
+    if index_file.exists():
+        return FileResponse(str(index_file))
     return {
         "name": "Vault API",
         "version": "1.0.0",
