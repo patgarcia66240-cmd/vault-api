@@ -69,9 +69,15 @@ class FlexibleCORSMiddleware(BaseHTTPMiddleware):
 
 
 # Configure CORS with wildcard pattern support
+# Par défaut : autorise localhost (tous ports) et tous les sous-domaines vercel.app
+default_origins = ["http://localhost:*", "https://*.vercel.app"]
+
+# Utilise ALLOWED_ORIGINS si définie, sinon utilise les patterns par défaut
+allowed_origins = settings.allowed_origins_list if settings.allowed_origins_list else default_origins
+
 app.add_middleware(
     FlexibleCORSMiddleware,
-    allow_origins=settings.allowed_origins_list,
+    allow_origins=allowed_origins,
 )
 
 # Include routers

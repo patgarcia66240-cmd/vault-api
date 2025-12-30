@@ -36,10 +36,13 @@ class Settings(BaseSettings):
 
     # CORS
     WEB_BASE_URL: str = "http://localhost:5173"
-    ALLOWED_ORIGINS: str = "http://localhost:5173,http://localhost:5174,https://vault-api-web.vercel.app"
+    ALLOWED_ORIGINS: str = ""  # Vide = utilise les patterns par défaut (localhost:* et *.vercel.app)
 
     @property
     def allowed_origins_list(self) -> List[str]:
+        # Retourne une liste vide si ALLOWED_ORIGINS n'est pas défini
+        if not self.ALLOWED_ORIGINS:
+            return []
         return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
 
     class Config:
