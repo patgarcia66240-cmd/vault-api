@@ -1,0 +1,6 @@
+# Ignorer le frontend pour le déploiement backend
+apps/web/*
+node_modules/*
+*.md
+.git*
+.env*
