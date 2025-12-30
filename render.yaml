@@ -3,17 +3,17 @@ services:
   # Service Web (FastAPI Backend)
   - type: web
     name: vault-api-server
-    runtime: docker
+    runtime: python
     plan: free
+    buildCommand: "cd apps/server-python && pip install -r requirements.txt"
+    startCommand: "cd apps/server-python && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: ENVIRONMENT
         value: production
       - key: PORT
         value: 8000
       - key: DATABASE_URL
-        fromDatabase:
-          name: vault-api-db
-          property: connectionString
+        sync: false
       - key: JWT_SECRET
         generate: true
       - key: CRYPTO_MASTER_KEY
@@ -28,10 +28,3 @@ services:
         sync: false
       - key: ALLOWED_ORIGINS
         sync: false
-
-databases:
-  # Base de données PostgreSQL
-  - name: vault-api-db
-    plan: free
-    databaseName: vault_api
-    user: vault_api_user
